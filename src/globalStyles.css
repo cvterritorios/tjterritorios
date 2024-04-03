@@ -1,17 +1,93 @@
-*{
-    margin: 0;
-    padding: 0;
+* {
+  margin: 0;
+  padding: 0;
 }
 
 body {
-    font-family: 'Noto Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-      sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+  font-family: "Noto Sans", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans",
+    "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-.navlink{
+.contentor{
+  min-height: 70vh;
+}
+
+.navlink {
   text-decoration: none;
-  color: azure;
+  color: whitesmoke;
+}
+
+#html5-qrcode-anchor-scan-type-change{
+  margin: 0.375rem 0.75rem;
+  text-align: center;
+  background-color: #dadddf;
+  border-radius: 0.375rem;
+  min-width: 88%;
+}
+
+#html5-qrcode-button-file-selection{
+  color: #fff;
+  background-color: #bbbfc2;
+  border-color: #b5b9bc;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 1rem;
+  padding: 0.375rem 0.75rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+#html5-qrcode-button-camera-stop,
+#html5-qrcode-button-camera-start {
+  color: #fff;
+  background-color: #6c757d;
+  border-color: #6c757d;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: inline-block;
+  font-size: 1rem;
+  padding: 0.375rem 0.75rem;
+  text-align: center;
+  text-decoration: none;
+}
+
+#html5-qrcode-button-camera-stop:hover,
+#html5-qrcode-button-camera-start:hover,
+#html5-qrcode-button-file-selection:hover {
+  color: #fff;
+  background-color: #8a8f93;
+  border-color: #565e64;
+}
+
+#html5-qrcode-button-camera-stop:active,
+#html5-qrcode-button-camera-start:active,
+#html5-qrcode-button-file-selection:active {
+  color: #fff;
+  background-color: #565e64;
+  border-color: #51585e;
+  box-shadow: inset 0 3px 5px rgba(0, 0, 0, 0.125);
+}
+
+#html5-qrcode-button-camera-stop:disabled,
+#html5-qrcode-button-camera-start:disabled {
+  color: #fff;
+  background-color: #6c757d;
+  border: #6c757d;
+}
+
+.menu-items>a{
+  margin-left: 0.8rem;
+  color: #dadddf;
+}
+
+.menu-items>a:hover{
+  color: #fff;
+}
+
+.menu-items>a:active{
+  color: #8a8f93;
 }

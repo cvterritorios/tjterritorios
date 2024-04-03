@@ -1,18 +1,19 @@
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { useEffect, useState } from "react";
-import { Container } from "react-bootstrap";
+import { Container, Modal } from "react-bootstrap";
 
 const QReader = () => {
   const [scanResult, setScanResult] = useState(null);
+  let num = 0;
 
   useEffect(() => {
     const scanner = new Html5QrcodeScanner("reader", {
       qrbox: 250,
       fps: 10,
-      aspectRatio: 1.0
+      aspectRatio: 1.0,
     });
 
-    scanner.render(success, error);
+    scanner.render(success);
 
     function success(result) {
       scanner.clear();
@@ -20,20 +21,32 @@ const QReader = () => {
     }
 
     function error(err) {
-      //      console.warn(err);
+      num++;
+      console.warn(num,err);
+      if (num >= 200) {
+        document.getElementById("html5-qrcode-button-camera-stop").click()
+      }
     }
   }, []);
 
+  setTimeout(() => {
+    let btn = document.getElementById("html5-qrcode-button-camera-permission");
+    if (btn) btn.click();
+  }, 1000);
+
   return (
     <>
-      <h1>QR Code</h1>
       <Container>
         {scanResult ? (
           <div>
             Success: <a href={scanResult}>{scanResult}</a>
           </div>
         ) : (
-          <div id="reader"></div>
+          <>
+            <Modal.Body>
+              <div id="reader"></div>
+            </Modal.Body>
+          </>
         )}
       </Container>
     </>
