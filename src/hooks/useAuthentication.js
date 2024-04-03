@@ -1,4 +1,3 @@
-import { db } from "../services/firebase";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -6,20 +5,23 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth";
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-} from "firebase/firestore";
 
+// hooks
+import { useFirestore } from "./useFirestore";
 import { useState, useEffect } from "react";
 
 export const useAuthentication = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
+
+  const {
+    getDocWhere,
+    error: dataError,
+  } = useFirestore();
+
+  useEffect(() => {
+    if (dataError) setError(dataError);
+  }, [dataError]);
 
   //cleanup
   const [cancelled, setCancelled] = useState(false);
@@ -79,17 +81,10 @@ export const useAuthentication = () => {
     setError(null);
 
     try {
-      const q = query(
-        collection(db, "congregacao"),
-        where("codigoAcesso", "==", data.accessConde)
-      );
+      let where = { attr: "codigoAcesso", comp: "==", value: data.accessConde };
 
-      const querySnapshot = await getDocs(q);
-      let id;
+      const id = await getDocWhere("congregacao", where, true);
 
-      querySnapshot.forEach((doc) => {
-        id = doc.id;
-      });
       let systemErrorMessage;
 
       if (!id) {
@@ -121,42 +116,6 @@ export const useAuthentication = () => {
     setLoading(false);
   };
 
-  // congregacoes
-  const getCongregacoes = async () => {
-    checkIfCancelled();
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const q = query(
-        collection(db, "congregacao") /* , where("capital", "==", true) */
-      );
-
-      let response = [];
-      const querySnapshot = await getDocs(q);
-      querySnapshot.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
-        // console.log(doc.id, " => ", doc.data());
-        setLoading(false);
-        response.push({ ...doc.data(), id: doc.id });
-      });
-      return response;
-    } catch (error) {
-      console.log(error.message);
-      console.log(typeof error.message);
-
-      let systemErrorMessage;
-
-      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
-
-      console.log(systemErrorMessage);
-
-      setError(systemErrorMessage);
-    }
-    setLoading(false);
-  };
-
   useEffect(() => {
     return () => setCancelled(true);
   }, []);
@@ -168,6 +127,5 @@ export const useAuthentication = () => {
     error,
     logout,
     login,
-    getCongregacoes,
   };
 };

@@ -1,6 +1,3 @@
-import { db } from "../../services/firebase";
-import { collection, doc, setDoc } from "firebase/firestore";
-
 import {
   Button,
   Col,
@@ -26,8 +23,6 @@ const Register = () => {
   const [error, setError] = useState("");
 
   const { createUser, error: authError, loading } = useAuthentication();
-
-  const congregacaoRef = collection(db, "congregacao");
 
   useEffect(() => {
     if (authError) setError(authError);

@@ -90,6 +90,7 @@ const NavBar = () => {
               <a>
                 <BsQrCodeScan
                   style={{
+                    color: "whitesmoke",
                     margin: "8px",
                     cursor: "pointer",
                   }}

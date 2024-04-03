@@ -1,5 +1,3 @@
-import { db } from "../../services/firebase";
-
 import {
   Button,
   Form,
@@ -12,6 +10,7 @@ import {
 //hooks
 import { useState, useEffect } from "react";
 import { useAuthentication } from "../../hooks/useAuthentication";
+import { useFirestore } from "../../hooks/useFirestore";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,22 +19,25 @@ const Login = () => {
   const [accessConde, setAccessConde] = useState("");
   const [error, setError] = useState("");
 
+  const { login, error: authError, loading } = useAuthentication();
+
   const {
-    login,
-    error: authError,
-    loading,
-    getCongregacoes: myCongregacoes,
-  } = useAuthentication();
+    getCollection,
+    error: dataError,
+    loading: dataLoading,
+  } = useFirestore();
 
   useEffect(() => {
     if (authError) setError(authError);
+    if (dataError) setError(dataError);
 
     getCongregacoes();
-  }, [authError]);
+  }, [authError, dataError]);
 
   const getCongregacoes = async () => {
-    const myCon = await myCongregacoes();
+    const myCon = await getCollection("congregacao");
 
+    console.log(myCon);
     const options = myCon.map((congregacao) => {
       return (
         <option key={congregacao.id} value={congregacao.email}>
@@ -59,10 +61,15 @@ const Login = () => {
       accessConde,
     };
 
-    console.log(congregacaoUser);
-    const res = await login(congregacaoUser);
-    // console.log(res);
+    // console.log(congregacaoUser);
+    await login(congregacaoUser);
   };
+
+  if(dataLoading){
+    return(
+        <p>Carregando...</p>
+    )
+  }
 
   return (
     <Container

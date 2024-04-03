@@ -4,7 +4,6 @@ import { Container, Modal } from "react-bootstrap";
 
 const QReader = () => {
   const [scanResult, setScanResult] = useState(null);
-  let num = 0;
 
   useEffect(() => {
     const scanner = new Html5QrcodeScanner("reader", {
@@ -18,14 +17,6 @@ const QReader = () => {
     function success(result) {
       scanner.clear();
       setScanResult(result);
-    }
-
-    function error(err) {
-      num++;
-      console.warn(num,err);
-      if (num >= 200) {
-        document.getElementById("html5-qrcode-button-camera-stop").click()
-      }
     }
   }, []);
 
