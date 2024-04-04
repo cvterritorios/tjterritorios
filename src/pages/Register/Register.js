@@ -12,6 +12,7 @@ import {
 //hooks
 import { useState, useEffect } from "react";
 import { useAuthentication } from "../../hooks/useAuthentication";
+import { useFirestore } from "../../hooks/useFirestore";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -21,40 +22,52 @@ const Register = () => {
   const [accessConde, setAccessConde] = useState("");
   const [accessCondeConfim, setAccessCondeConfim] = useState("");
   const [error, setError] = useState("");
+  const [registerLoading, setRegisterLoading] = useState(false);
 
   const { createUser, error: authError, loading } = useAuthentication();
+  const { setDocument, error: dataError } = useFirestore();
 
   useEffect(() => {
     if (authError) setError(authError);
-  }, [authError]);
+    if (dataError) setError(dataError);
+  }, [authError, dataError]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError("");
+    setError(null);
 
     if (accessConde !== accessCondeConfim) {
       setError("Confirme o codigo de acesso!");
       return;
     }
 
+    const congregacaoUser = {
+      congregacaoName,
+      email,
+      password,
+    };
+    setRegisterLoading(true);
+    const res = await createUser(congregacaoUser);
+
     const congregacao = {
+      uid: res.uid,
       nome: congregacaoName,
       email: email,
       codigoAcesso: accessConde,
       reponsaveis: [reponsavelName],
     };
 
-    const congregacaoUser = {
-      congregacaoName,
-      email,
-      password,
-    };
+    const res2 = await setDocument("congregacao", congregacao);
 
-    const res = await createUser(congregacaoUser);
     console.log(res);
     console.log(congregacao);
+    if (res2) setRegisterLoading(false);
   };
+
+  if (registerLoading) {
+    return <p>Carregando...</p>;
+  }
 
   return (
     <Container

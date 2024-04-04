@@ -1,5 +1,6 @@
 import {
   getAuth,
+  onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
@@ -13,14 +14,13 @@ import { useState, useEffect } from "react";
 export const useAuthentication = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
+  const [c_User, setC_User] = useState(null);
 
-  const {
-    getDocWhere,
-    error: dataError,
-  } = useFirestore();
+  const { getDocWhere, error: dataError } = useFirestore();
 
   useEffect(() => {
     if (dataError) setError(dataError);
+    currentUser();
   }, [dataError]);
 
   //cleanup
@@ -31,6 +31,19 @@ export const useAuthentication = () => {
   function checkIfCancelled() {
     if (cancelled) return;
   }
+
+  // current User
+  const currentUser = () => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setC_User({
+          email: user.email,
+          uid: user.uid,
+          name: user.displayName,
+        });
+      }
+    });
+  };
 
   // register
   const createUser = async (data) => {
@@ -47,6 +60,20 @@ export const useAuthentication = () => {
       );
 
       await updateProfile(user, { displayName: data.congregacaoName });
+      const dataCurrent = await getDocWhere("congregacao", {
+        attr: "uid",
+        comp: "==",
+        value: c_User.uid,
+      });
+
+      logout();
+      setTimeout(() => {
+        login({
+          email: c_User.email,
+          password: "!AlgoPraSaber",
+          accessConde: dataCurrent.codigoAcesso,
+        });
+      }, [300]);
 
       setLoading(false);
       return user;
@@ -122,6 +149,7 @@ export const useAuthentication = () => {
 
   return {
     auth,
+    currentUser,
     createUser,
     loading,
     error,

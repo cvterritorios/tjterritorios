@@ -6,6 +6,8 @@ import {
   getDocs,
   doc,
   getDoc,
+  addDoc,
+  updateDoc,
 } from "firebase/firestore";
 
 // hooks
@@ -45,6 +47,26 @@ export const useFirestore = () => {
     }
   }
 
+  // functions - sets
+  const setDocument = async (collect, data) => {
+    validate("start");
+    let systemErrorMessage;
+
+    try {
+      const res = await addDoc(collection(db, collect), data);
+      validate("end");
+      return res;
+    } catch (error) {
+      console.log(error.messeger);
+      console.log(typeof error.messeger);
+
+      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
+
+      setError(systemErrorMessage);
+    }
+    validate("end");
+  };
+
   // functions - gets
   const getDocId = async (collect, documentId) => {
     validate("start");
@@ -73,7 +95,7 @@ export const useFirestore = () => {
     validate("end");
   };
 
-  const getDocWhere = async (collect, whr, id=false) => {
+  const getDocWhere = async (collect, whr, id = false) => {
     //where {attr, comp, value}
     validate("start");
 
@@ -86,8 +108,8 @@ export const useFirestore = () => {
       const res = await getDoscsQuery(q);
 
       validate("end");
-      if(id){
-        return res[0].id
+      if (id) {
+        return res[0].id;
       }
       return res[0];
     } catch (error) {
@@ -178,6 +200,8 @@ export const useFirestore = () => {
   return {
     error,
     loading,
+    //functions -sets
+    setDocument,
     //functions - gets
     getDocId,
     getDocWhere,
