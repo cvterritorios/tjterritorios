@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { onAuthStateChanged } from "firebase/auth";
+import { Spinner } from "react-bootstrap";
 
 // hooks
 import { useState, useEffect } from "react";
@@ -17,6 +18,7 @@ import Login from "./pages/Login/Login";
 import Register from "./pages/Register/Register";
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
+import Congregacoes from "./pages/Congregacoes/Congregacoes";
 
 const App = () => {
   const [user, setUser] = useState(undefined);
@@ -64,11 +66,30 @@ const App = () => {
                   )
                 }
               />
+              <Route
+                path="/congregacoes"
+                element={
+                  user ? (
+                    user.displayName === "adm" ? (
+                      <Congregacoes />
+                    ) : (
+                      <Navigate to="/" />
+                    )
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
             </Routes>
           </div>
           <Footer />
         </BrowserRouter>
       </AuthProvider>
+      <div id="loading-screen" className="d-none">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </div>
     </>
   );
 };

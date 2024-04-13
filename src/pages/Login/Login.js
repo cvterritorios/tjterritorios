@@ -2,6 +2,9 @@ import {
   Button,
   Form,
   Card,
+  Modal,
+  Row,
+  Col,
   Container,
   CardTitle,
   Alert,
@@ -16,16 +19,27 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password] = useState("!AlgoPraSaber");
   const [congregacoes, setCongregacoes] = useState("");
+  const [perfis, setPerfis] = useState("");
   const [accessConde, setAccessConde] = useState("");
   const [error, setError] = useState("");
+  const [congregacaoUser, setCongregacaoUser] = useState("");
+
+  const [congregacao, setCongregacao] = useState("");
+  const [perfil, setPerfil] = useState("");
+
+  const [show, setShow] = useState(false);
 
   const { login, error: authError, loading } = useAuthentication();
-
   const {
     getCollection,
+    getDocWhere,
+    updateDocument,
     error: dataError,
     loading: dataLoading,
   } = useFirestore();
+
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
 
   useEffect(() => {
     if (authError) setError(authError);
@@ -37,13 +51,14 @@ const Login = () => {
   const getCongregacoes = async () => {
     const myCon = await getCollection("congregacao");
 
-    console.log(myCon);
     const options = myCon.map((congregacao) => {
-      return (
-        <option key={congregacao.id} value={congregacao.email}>
-          {congregacao.nome}
-        </option>
-      );
+      if (congregacao.nome !== "ADM") {
+        return (
+          <option key={congregacao.id} value={congregacao.email}>
+            {congregacao.nome}
+          </option>
+        );
+      }
     });
 
     setCongregacoes(options);
@@ -55,20 +70,82 @@ const Login = () => {
 
     setError("");
 
-    const congregacaoUser = {
-      email,
+    const adms = [
+      "matt",
+      "mattkassoll@gmail.com",
+      "cvterritorios1958",
+      "covilhaterritorios1958@gmail.com",
+    ];
+
+    function chooseADM(accessC) {
+      for (let n = 0; n < adms.length; n + 2) {
+        if (accessC === adms[n]) return adms[n + 1];
+      }
+    }
+
+    const mEmail = email === "" ? chooseADM(accessConde) : email;
+
+    const congregUser = {
+      email: mEmail,
       password,
       accessConde,
     };
 
+    let where = {
+      attr: "codigoAcesso",
+      comp: "==",
+      value: congregUser.accessConde,
+    };
+
+    const cong = await getDocWhere("congregacao", where);
+
+    if (!cong) {
+      console.log("Codigo de acesso incorreto!");
+      return;
+    }
+
+    if (cong.responsaveis) {
+      const options = cong.responsaveis.map((responsavel, idx) => {
+        return (
+          <option key={idx} value={idx}>
+            {responsavel.nome}
+          </option>
+        );
+      });
+
+      setPerfis(options);
+    }
+
+    setCongregacaoUser(congregUser);
+    if (cong.nome !== "adm" && cong.nome !== "ADM" && cong.nome !== "Adm") {
+      handleShow();
+    }
     // console.log(congregacaoUser);
+  };
+
+  const entrar = async (e) => {
+    e.preventDefault()
+
+    let where = {
+      attr: "codigoAcesso",
+      comp: "==",
+      value: congregacaoUser.accessConde,
+    };
+
+    const conON = await getDocWhere("congregacao", where);
+    const id = await getDocWhere("congregacao", where, true);
+
+    conON.responsaveis[perfil].isLoged = true;
+ 
+    // console.log("2", conON);
+
+    await updateDocument("congregacao", id, conON);
+
     await login(congregacaoUser);
   };
 
-  if(dataLoading){
-    return(
-        <p>Carregando...</p>
-    )
+  if (dataLoading) {
+    return <p>Carregando...</p>;
   }
 
   return (
@@ -125,7 +202,7 @@ const Login = () => {
               </Button>
             )}
             {loading && (
-              <Button variant="primary" className="w-100 mb-3" type="submit">
+              <Button variant="primary" className="w-100 mb-3 disabled">
                 Aguarde...
               </Button>
             )}
@@ -139,6 +216,35 @@ const Login = () => {
           </Form>
         </Card.Body>
       </Card>
+      <Modal
+        show={show}
+        onHide={handleClose}
+        keyboard={false}
+        backdrop="static"
+        centered
+        style={{ maxHeight: "100vh" }}
+      >
+        <Modal.Body>
+          <Form onSubmit={entrar}>
+            <Form.Group className="mb-3">
+              <Form.Label>Selecione o Perfil</Form.Label>
+              <Form.Select
+                aria-label="Selecione o Perfil"
+                required
+                onChange={(e) => {
+                  setPerfil(e.target.value);
+                }}
+              >
+                <option>Escolha o seu perfil</option>
+                {perfis}
+              </Form.Select>
+            </Form.Group>
+            <Button variant="primary" type="submit">
+              Enviar
+            </Button>
+          </Form>
+        </Modal.Body>
+      </Modal>
     </Container>
   );
 };

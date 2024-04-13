@@ -67,6 +67,26 @@ export const useFirestore = () => {
     validate("end");
   };
 
+  // functions - update
+  const updateDocument = async (collect,docu, data) => {
+    validate("start");
+    let systemErrorMessage;
+
+    try {
+      const res = await updateDoc(doc(db, collect, docu), data);
+      validate("end");
+      return res;
+    } catch (error) {
+      console.log(error.messeger);
+      console.log(typeof error.messeger);
+
+      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
+
+      setError(systemErrorMessage);
+    }
+    validate("end");
+  };
+
   // functions - gets
   const getDocId = async (collect, documentId) => {
     validate("start");
@@ -95,7 +115,7 @@ export const useFirestore = () => {
     validate("end");
   };
 
-  const getDocWhere = async (collect, whr, id = false) => {
+  const getDocWhere = async (collect, whr={attr:"",comp:"",value:""}, id = false) => {
     //where {attr, comp, value}
     validate("start");
 
@@ -158,7 +178,7 @@ export const useFirestore = () => {
     }
   };
 
-  const getCollectionWhere = async (collect, whr) => {
+  const getCollectionWhere = async (collect, whr={attr:"",comp:"",value:""}) => {
     //where {attr, comp, value}
     validate("start");
 
@@ -202,6 +222,8 @@ export const useFirestore = () => {
     loading,
     //functions -sets
     setDocument,
+    //functions - updates
+    updateDocument,
     //functions - gets
     getDocId,
     getDocWhere,

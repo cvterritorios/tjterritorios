@@ -1,26 +1,31 @@
 import {
   getAuth,
-  onAuthStateChanged,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signOut,
+  onAuthStateChanged,
   updateProfile,
 } from "firebase/auth";
 
 // hooks
 import { useFirestore } from "./useFirestore";
 import { useState, useEffect } from "react";
+import { Navigate } from "react-router-dom";
 
 export const useAuthentication = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
-  const [c_User, setC_User] = useState(null);
+  const [uss, setUss] = useState("");
 
-  const { getDocWhere, error: dataError } = useFirestore();
+  const {
+    setDocument,
+    getDocId,
+    getDocWhere,
+    error: dataError,
+  } = useFirestore();
 
   useEffect(() => {
     if (dataError) setError(dataError);
-    currentUser();
   }, [dataError]);
 
   //cleanup
@@ -32,17 +37,45 @@ export const useAuthentication = () => {
     if (cancelled) return;
   }
 
-  // current User
-  const currentUser = () => {
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setC_User({
-          email: user.email,
-          uid: user.uid,
-          name: user.displayName,
-        });
-      }
-    });
+  // currentUser
+  const current_user = async () => {
+    checkIfCancelled();
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      let cur_user;
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          cur_user = await getDocWhere("congregacao", {
+            attr: "uid",
+            comp: "==",
+            value: user.uid,
+          });
+
+          // console.log("1º", user.uid);
+          // console.log("2º", cur_user);
+
+          setUss(cur_user);
+        }
+      });
+    } catch (error) {
+      console.log(error.message);
+      console.log(typeof error.message);
+
+      let systemErrorMessage;
+
+      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
+
+      // console.log(systemErrorMessage);
+
+      setError(systemErrorMessage);
+    }
+
+    setLoading(false);
+    return uss;
   };
 
   // register
@@ -59,23 +92,50 @@ export const useAuthentication = () => {
         data.password
       );
 
-      await updateProfile(user, { displayName: data.congregacaoName });
+      // console.log("1º", user);
+
+      if (data.name !== "adm" && data.name !== "ADM" && data.name !== "Adm")
+        await updateProfile(user, { displayName: data.name });
+
+      const admUser = await getDocId("adm_now", "9B04i7SLYIpMV9hINolI");
+
+      // console.log("2º", admUser);
+
       const dataCurrent = await getDocWhere("congregacao", {
         attr: "uid",
         comp: "==",
-        value: c_User.uid,
+        value: admUser.uid,
       });
 
-      logout();
+      // console.log("3º", dataCurrent);
+
+      const congregacao = {
+        uid: user.uid,
+        nome: user.displayName,
+        email: user.email,
+        codigoAcesso: data.codigoAcesso,
+        responsaveis: data.responsaveis,
+      };
+
+      await setDocument("congregacao", congregacao);
+
       setTimeout(() => {
+        logout();
         login({
-          email: c_User.email,
+          email: admUser.email,
           password: "!AlgoPraSaber",
           accessConde: dataCurrent.codigoAcesso,
         });
-      }, [300]);
+      }, 300);
 
       setLoading(false);
+      
+      // console.log("4º", "Suma");
+
+      const loadingScreen = document.getElementById("loading-screen");
+      loadingScreen.classList.add("d-none");
+      loadingScreen.classList.remove("loading");
+
       return user;
     } catch (error) {
       console.log(error.messeger);
@@ -149,8 +209,8 @@ export const useAuthentication = () => {
 
   return {
     auth,
-    currentUser,
     createUser,
+    current_user,
     loading,
     error,
     logout,

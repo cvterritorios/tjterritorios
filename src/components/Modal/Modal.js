@@ -1,8 +1,8 @@
-import { useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
+import { useEffect, useState } from "react";
+import { Modal, Button, Card, Row, Col } from "react-bootstrap";
 
-const MyModal =()=> {
+
+const MyModal = () => {
   const [show, setShow] = useState(false);
 
   const handleClose = () => setShow(false);
@@ -37,6 +37,6 @@ const MyModal =()=> {
       </Modal>
     </>
   );
-}
+};
 
-export default MyModal;
+export { MyModal };

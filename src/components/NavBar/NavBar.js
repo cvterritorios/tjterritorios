@@ -1,10 +1,20 @@
-import { Container, Navbar, Modal, Button, Nav } from "react-bootstrap";
+import {
+  Container,
+  Navbar,
+  Modal,
+  Button,
+  Nav,
+  Card,
+  Row,
+  Col,
+} from "react-bootstrap";
 import { NavLink, Navigate } from "react-router-dom";
 import { BsQrCodeScan } from "react-icons/bs";
 
 // hooks
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuthentication } from "../../hooks/useAuthentication";
+import { useFirestore } from "../../hooks/useFirestore";
 
 // context
 import { useAuthValue } from "../../contexts/AuthContext";
@@ -16,6 +26,7 @@ import QReader from "../../containers/QReader/QReader";
 const NavBar = () => {
   const [show, setShow] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
+  const [userNow, setUserNow] = useState("");
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -24,12 +35,30 @@ const NavBar = () => {
   const handleShowMenu = () => setShowMenu(true);
 
   const { user } = useAuthValue();
-  const { logout } = useAuthentication();
+  const { logout, loading: authLoading } = useAuthentication();
+  const { getDocWhere, loading: dataLoading } = useFirestore();
 
   const onDoubleClickHandler = () => {
-    console.log("You have Clicked Twice");
     handleShowMenu();
   };
+
+  async function getUserNow() {
+    const u = await getDocWhere("congregacao", {
+      attr: "uid",
+      comp: "==",
+      value: user.uid,
+    });
+    console.warn(u.responsaveis);
+    setUserNow(u);
+  }
+
+  useEffect(() => {
+    if (user) getUserNow();
+  }, [user]);
+
+  if (authLoading || dataLoading) {
+    return <p>Carregando...</p>;
+  }
 
   return (
     <>
@@ -76,10 +105,15 @@ const NavBar = () => {
           }
           <div className="d-flex align-items-center menu-items">
             {user ? (
-              user.displayName === "adm" ? (
-                <NavLink to="/register" className="navlink">
-                  Registar
-                </NavLink>
+              userNow.nome === "adm" || userNow.nome === "ADM" ? (
+                <>
+                  <NavLink to="/register" className="navlink">
+                    Registar
+                  </NavLink>
+                  <NavLink to="/congregacoes" className="navlink">
+                    Congregações
+                  </NavLink>
+                </>
               ) : (
                 ""
               )
@@ -105,6 +139,7 @@ const NavBar = () => {
 
       {user && (
         <>
+          {/* Modal QRCode */}
           <Modal
             show={show}
             onHide={handleClose}
@@ -119,6 +154,7 @@ const NavBar = () => {
             <QReader />
           </Modal>
 
+          {/* Modal Info */}
           <Modal
             show={showMenu}
             onHide={handleCloseMenu}
@@ -126,8 +162,30 @@ const NavBar = () => {
             style={{ maxHeight: "100vh" }}
           >
             <Modal.Body>
-              <Modal.Title>Ler QRCode</Modal.Title>
-
+              <Modal.Title>Informações do perfil</Modal.Title>
+              <Card>
+                <Row>
+                  <Col xs={7} md={5}>
+                    <strong>Perfil:</strong>
+                    <span> {userNow.nome}</span>
+                  </Col>
+                  {userNow.responsaveis &&
+                    userNow.responsaveis.map((element, idx) =>
+                      element.isLoged ? (
+                        <Col xs={7} md={5} key={idx}>
+                          <strong>Perfil:</strong>
+                          <span> {element.nome}</span>
+                        </Col>
+                      ) : (
+                        ""
+                      )
+                    )}
+                </Row>
+                <div xs={12} md={8}>
+                  <strong>Email:</strong>
+                  <span> {userNow.email}</span>
+                </div>
+              </Card>
               <Button variant="danger" onClick={logout}>
                 Sair
               </Button>

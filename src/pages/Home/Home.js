@@ -1,9 +1,12 @@
-
+import ToolsBar from "../../components/ToolsBar/ToolsBar";
+import { Container } from "react-bootstrap";
 
 const Home = () => {
   return (
     <>
-      <h1>Home</h1>
+        <ToolsBar />
+
+
     </>
   );
 };
