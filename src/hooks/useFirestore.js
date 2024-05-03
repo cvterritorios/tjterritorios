@@ -47,25 +47,7 @@ export const useFirestore = () => {
     }
   }
 
-  // functions - sets
-  const setDocument = async (collect, data) => {
-    validate("start");
-    let systemErrorMessage;
-
-    try {
-      const res = await addDoc(collection(db, collect), data);
-      validate("end");
-      return res;
-    } catch (error) {
-      console.log(error.messeger);
-      console.log(typeof error.messeger);
-
-      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
-
-      setError(systemErrorMessage);
-    }
-    validate("end");
-  };
+  
 
   // functions - update
   const updateDocument = async (collect,docu, data) => {
@@ -220,8 +202,6 @@ export const useFirestore = () => {
   return {
     error,
     loading,
-    //functions -sets
-    setDocument,
     //functions - updates
     updateDocument,
     //functions - gets

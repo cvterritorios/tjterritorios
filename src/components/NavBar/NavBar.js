@@ -3,7 +3,6 @@ import {
   Navbar,
   Modal,
   Button,
-  Nav,
   Card,
   Row,
   Col,
@@ -43,12 +42,12 @@ const NavBar = () => {
   };
 
   async function getUserNow() {
-    const u = await getDocWhere("congregacao", {
+    const u = await getDocWhere("users", {
       attr: "uid",
       comp: "==",
       value: user.uid,
     });
-    console.warn(u.responsaveis);
+    console.warn(u);
     setUserNow(u);
   }
 
@@ -105,7 +104,7 @@ const NavBar = () => {
           }
           <div className="d-flex align-items-center menu-items">
             {user ? (
-              userNow.nome === "adm" || userNow.nome === "ADM" ? (
+              userNow.name === "Adm" || userNow.name === "ADM" ? (
                 <>
                   <NavLink to="/register" className="navlink">
                     Registar
@@ -166,15 +165,15 @@ const NavBar = () => {
               <Card>
                 <Row>
                   <Col xs={7} md={5}>
-                    <strong>Perfil:</strong>
-                    <span> {userNow.nome}</span>
+                    <strong>Congregação:</strong>
+                    <span> {userNow.name}</span>
                   </Col>
-                  {userNow.responsaveis &&
-                    userNow.responsaveis.map((element, idx) =>
+                  {userNow.responsible &&
+                    userNow.responsible.map((element, idx) =>
                       element.isLoged ? (
                         <Col xs={7} md={5} key={idx}>
                           <strong>Perfil:</strong>
-                          <span> {element.nome}</span>
+                          <span> {element.name}</span>
                         </Col>
                       ) : (
                         ""

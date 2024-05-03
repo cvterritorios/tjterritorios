@@ -11,18 +11,16 @@ import {
 import { useFirestore } from "./useFirestore";
 import { useState, useEffect } from "react";
 import { Navigate } from "react-router-dom";
+import { useInsertDocument } from "./useInsertDocument";
 
 export const useAuthentication = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
   const [uss, setUss] = useState("");
 
-  const {
-    setDocument,
-    getDocId,
-    getDocWhere,
-    error: dataError,
-  } = useFirestore();
+  const { getDocId, getDocWhere, error: dataError } = useFirestore();
+
+  const { insertDocument, response } = useInsertDocument("users");
 
   useEffect(() => {
     if (dataError) setError(dataError);
@@ -94,7 +92,7 @@ export const useAuthentication = () => {
 
       // console.log("1º", user);
 
-      if (data.name !== "adm" && data.name !== "ADM" && data.name !== "Adm")
+      if (data.name !== "ADM")
         await updateProfile(user, { displayName: data.name });
 
       const admUser = await getDocId("adm_now", "9B04i7SLYIpMV9hINolI");
@@ -111,30 +109,30 @@ export const useAuthentication = () => {
 
       const congregacao = {
         uid: user.uid,
-        nome: user.displayName,
+        name: user.displayName,
         email: user.email,
-        codigoAcesso: data.codigoAcesso,
-        responsaveis: data.responsaveis,
+        accessCode: data.codigoAcesso,
+        responsible: data.responsaveis,
       };
 
-      await setDocument("congregacao", congregacao);
+      await insertDocument(congregacao);
 
       setTimeout(() => {
         logout();
         login({
           email: admUser.email,
           password: "!AlgoPraSaber",
-          accessConde: dataCurrent.codigoAcesso,
+          accessCode: dataCurrent.codigoAcesso,
         });
       }, 300);
 
       setLoading(false);
-      
+
       // console.log("4º", "Suma");
 
-      const loadingScreen = document.getElementById("loading-screen");
+      /*  const loadingScreen = document.getElementById("loading-screen");
       loadingScreen.classList.add("d-none");
-      loadingScreen.classList.remove("loading");
+      loadingScreen.classList.remove("loading"); */
 
       return user;
     } catch (error) {
@@ -157,6 +155,7 @@ export const useAuthentication = () => {
   // logout
   const logout = () => {
     checkIfCancelled();
+
     signOut(auth);
   };
 
@@ -168,9 +167,9 @@ export const useAuthentication = () => {
     setError(null);
 
     try {
-      let where = { attr: "codigoAcesso", comp: "==", value: data.accessConde };
+      let where = { attr: "accessCode", comp: "==", value: data.accessCode };
 
-      const id = await getDocWhere("congregacao", where, true);
+      const id = await getDocWhere("users", where, true);
 
       let systemErrorMessage;
 

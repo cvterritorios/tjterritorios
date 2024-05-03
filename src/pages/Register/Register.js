@@ -31,11 +31,9 @@ const Register = () => {
   const [registerLoading, setRegisterLoading] = useState("");
 
   const { createUser, error: authError, loading } = useAuthentication();
-  const { updateDocument } = useFirestore();
+  const { updateDocument, getDocWhere } = useFirestore();
 
   const { user } = useAuthValue();
-
-  const loadingScreen = document.getElementById("loading-screen");
 
   const auth = getAuth();
 
@@ -43,24 +41,32 @@ const Register = () => {
     if (authError) setError(authError);
 
     onAuthStateChanged(auth, async (user) => {
-      if (user && user.displayName === "adm") {
-        await updateDocument("adm_now", "9B04i7SLYIpMV9hINolI", {
-          email: user.email,
-          uid: user.uid,
-          name: user.displayName,
+      if (user) {
+        const myUser = await getDocWhere("users", {
+          attr: "uid",
+          comp: "==",
+          value: user.uid,
         });
+
+        if (myUser.name === "ADM") {
+          await updateDocument("adm_now", "I5jcx4UzZ9WlvlDKEkYt", {
+            email: user.email,
+            uid: user.uid,
+            name: user.displayName,
+          });
+        }
       }
     });
 
-    if (registerLoading) {
-      loadingScreen.classList.remove("d-none");
-      loadingScreen.classList.add("loading");
-    }
-    if (!registerLoading) {
-      loadingScreen.classList.add("d-none");
-      loadingScreen.classList.remove("loading");
-    }
-  }, [authError, registerLoading, user]);
+    // if (registerLoading) {
+    //   loadingScreen.classList.remove("d-none");
+    //   loadingScreen.classList.add("loading");
+    // }
+    // if (!registerLoading) {
+    //   loadingScreen.classList.add("d-none");
+    //   loadingScreen.classList.remove("loading");
+    // }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -74,12 +80,12 @@ const Register = () => {
     }
 
     const congregacaoUser = {
-      nome: congregacaoName,
+      name: congregacaoName.toLocaleUpperCase(),
       email: email,
       password: password,
-      codigoAcesso: accessConde,
-      responsaveis: [
-        { nome: responsavelName, isLoged: false /* , codigoPerfil:  */ },
+      accessCode: accessConde,
+      responsible: [
+        { name: responsavelName, isLoged: false /* , codigoPerfil:  */ },
       ],
     };
 
@@ -202,9 +208,9 @@ const Register = () => {
                   type="password"
                   placeholder=" _Confirmar Codigo"
                   title="Confirme o código de acesso"
-                  defaultValue={responsavelPass}
+                  defaultValue={responsavelPassConfirm}
                   onChange={(e) => {
-                    setResponsavelPass(e.target.value);
+                    setResponsavelPassConfirm(e.target.value);
                   }}
                 />
               </Form.Group>

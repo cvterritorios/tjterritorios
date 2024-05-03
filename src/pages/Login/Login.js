@@ -3,8 +3,6 @@ import {
   Form,
   Card,
   Modal,
-  Row,
-  Col,
   Container,
   CardTitle,
   Alert,
@@ -20,7 +18,7 @@ const Login = () => {
   const [password] = useState("!AlgoPraSaber");
   const [congregacoes, setCongregacoes] = useState("");
   const [perfis, setPerfis] = useState("");
-  const [accessConde, setAccessConde] = useState("");
+  const [accessCode, setAccessCode] = useState("");
   const [error, setError] = useState("");
   const [congregacaoUser, setCongregacaoUser] = useState("");
 
@@ -49,13 +47,13 @@ const Login = () => {
   }, [authError, dataError]);
 
   const getCongregacoes = async () => {
-    const myCon = await getCollection("congregacao");
+    const myCon = await getCollection("users");
 
     const options = myCon.map((congregacao) => {
-      if (congregacao.nome !== "ADM") {
+      if (congregacao.name !== "ADM") {
         return (
           <option key={congregacao.id} value={congregacao.email}>
-            {congregacao.nome}
+            {congregacao.name}
           </option>
         );
       }
@@ -83,32 +81,30 @@ const Login = () => {
       }
     }
 
-    const mEmail = email === "" ? chooseADM(accessConde) : email;
+    const mEmail = email === "" ? chooseADM(accessCode) : email;
 
     const congregUser = {
       email: mEmail,
       password,
-      accessConde,
+      accessCode,
     };
 
-    let where = {
-      attr: "codigoAcesso",
+    const cong = await getDocWhere("users", {
+      attr: "accessCode",
       comp: "==",
-      value: congregUser.accessConde,
-    };
-
-    const cong = await getDocWhere("congregacao", where);
+      value: congregUser.accessCode,
+    });
 
     if (!cong) {
       console.log("Codigo de acesso incorreto!");
       return;
     }
 
-    if (cong.responsaveis) {
-      const options = cong.responsaveis.map((responsavel, idx) => {
+    if (cong.responsible) {
+      const options = cong.responsible.map((responsavel, idx) => {
         return (
           <option key={idx} value={idx}>
-            {responsavel.nome}
+            {responsavel.name}
           </option>
         );
       });
@@ -117,29 +113,34 @@ const Login = () => {
     }
 
     setCongregacaoUser(congregUser);
-    if (cong.nome !== "adm" && cong.nome !== "ADM" && cong.nome !== "Adm") {
+    if (cong.name === "ADM") {
+      await login(congregUser);
+    } else {
       handleShow();
     }
     // console.log(congregacaoUser);
   };
 
   const entrar = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
 
     let where = {
-      attr: "codigoAcesso",
+      attr: "accessCode",
       comp: "==",
-      value: congregacaoUser.accessConde,
+      value: congregacaoUser.accessCode,
     };
 
-    const conON = await getDocWhere("congregacao", where);
-    const id = await getDocWhere("congregacao", where, true);
+    const conON = await getDocWhere("users", where);
+    const id = await getDocWhere("users", where, true);
 
-    conON.responsaveis[perfil].isLoged = true;
- 
+    conON.responsible.map((element) => {
+      element.isLoged = false;
+    });
+
+    conON.responsible[perfil].isLoged = true;
     // console.log("2", conON);
 
-    await updateDocument("congregacao", id, conON);
+    await updateDocument("users", id, conON);
 
     await login(congregacaoUser);
   };
@@ -189,9 +190,9 @@ const Login = () => {
               <Form.Control
                 required
                 title="Digite o código de acesso"
-                defaultValue={accessConde}
+                defaultValue={accessCode}
                 onChange={(e) => {
-                  setAccessConde(e.target.value);
+                  setAccessCode(e.target.value);
                 }}
               />
             </Form.Group>
@@ -224,10 +225,12 @@ const Login = () => {
         centered
         style={{ maxHeight: "100vh" }}
       >
+        <Modal.Header closeButton>
+          <Modal.Title>Selecione o Perfil</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
           <Form onSubmit={entrar}>
             <Form.Group className="mb-3">
-              <Form.Label>Selecione o Perfil</Form.Label>
               <Form.Select
                 aria-label="Selecione o Perfil"
                 required
