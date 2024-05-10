@@ -5,6 +5,7 @@ import { Spinner } from "react-bootstrap";
 // hooks
 import { useState, useEffect } from "react";
 import { useAuthentication } from "./hooks/useAuthentication";
+import { useSessionStorage } from "./hooks/useSessionStorage";
 
 // context
 import { AuthProvider } from "./contexts/AuthContext";
@@ -23,6 +24,8 @@ import Congregacoes from "./pages/Congregacoes/Congregacoes";
 const App = () => {
   const [user, setUser] = useState(undefined);
   const { auth } = useAuthentication();
+
+  const { isAdmin } = useSessionStorage();
 
   const loadingUser = user === undefined;
 
@@ -56,7 +59,7 @@ const App = () => {
                 path="/register"
                 element={
                   user ? (
-                    user.displayName === "adm" ? (
+                    isAdmin() ? (
                       <Register />
                     ) : (
                       <Navigate to="/" />
@@ -70,7 +73,7 @@ const App = () => {
                 path="/congregacoes"
                 element={
                   user ? (
-                    user.displayName === "adm" ? (
+                    isAdmin() ? (
                       <Congregacoes />
                     ) : (
                       <Navigate to="/" />

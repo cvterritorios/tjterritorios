@@ -15,18 +15,22 @@ import { useFirestore } from "../../hooks/useFirestore";
 
 const Login = () => {
   const [email, setEmail] = useState("");
-  const [password] = useState("!AlgoPraSaber");
-  const [congregacoes, setCongregacoes] = useState("");
-  const [perfis, setPerfis] = useState("");
+  const [password, setPassword] = useState("!AlgoPraSaber");
   const [accessCode, setAccessCode] = useState("");
-  const [error, setError] = useState("");
-  const [congregacaoUser, setCongregacaoUser] = useState("");
 
+  const [error, setError] = useState("");
+  const [show, setShow] = useState(false);
+  const [logMode, setLogMode] = useState(false);
+
+  const [congregacaoUser, setCongregacaoUser] = useState("");
   const [congregacao, setCongregacao] = useState("");
   const [perfil, setPerfil] = useState("");
 
-  const [show, setShow] = useState(false);
+  // Options
+  const [congregacoesOptions, setCongregacoesOptions] = useState("");
+  const [perfisOptions, setPerfisOptions] = useState("");
 
+  // my Hooks
   const { login, error: authError, loading } = useAuthentication();
   const {
     getCollection,
@@ -43,63 +47,65 @@ const Login = () => {
     if (authError) setError(authError);
     if (dataError) setError(dataError);
 
-    getCongregacoes();
+    makeCongregacoesOptions();
   }, [authError, dataError]);
 
-  const getCongregacoes = async () => {
-    const myCon = await getCollection("users");
+  const makeCongregacoesOptions = async () => {
+    const myList = await getCollection("congregacoes");
 
-    const options = myCon.map((congregacao) => {
-      if (congregacao.name !== "ADM") {
-        return (
-          <option key={congregacao.id} value={congregacao.email}>
-            {congregacao.name}
-          </option>
-        );
-      }
+    const options = myList.map((congregacao) => {
+      return (
+        <option key={congregacao.id} value={congregacao.email}>
+          {congregacao.name}
+        </option>
+      );
     });
 
-    setCongregacoes(options);
+    setCongregacoesOptions(options);
     // console.log(myCon);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    setError("");
+    setError(null);
 
-    const adms = [
+    /* [
       "matt",
       "mattkassoll@gmail.com",
       "cvterritorios1958",
       "covilhaterritorios1958@gmail.com",
-    ];
+    ]; 
+    
+    console.log(congregacaoUser, await congregacaoId);
+    return;
+    */
 
-    function chooseADM(accessC) {
-      for (let n = 0; n < adms.length; n + 2) {
-        if (accessC === adms[n]) return adms[n + 1];
-      }
+
+    if (logMode) {
+      await login({ email, password, adm: true });
     }
 
-    const mEmail = email === "" ? chooseADM(accessCode) : email;
-
     const congregUser = {
-      email: mEmail,
+      email,
       password,
       accessCode,
     };
-
-    const cong = await getDocWhere("users", {
+    
+    //buscar congregação pelo codigo de acesso
+    const cong = await getDocWhere("congregacoes", {
       attr: "accessCode",
       comp: "==",
       value: congregUser.accessCode,
     });
 
+    // Não encontrado
     if (!cong) {
       console.log("Codigo de acesso incorreto!");
       return;
     }
 
+    // make perfil options - se tiver perfis de responsaveis na congregacao
     if (cong.responsible) {
       const options = cong.responsible.map((responsavel, idx) => {
         return (
@@ -109,16 +115,12 @@ const Login = () => {
         );
       });
 
-      setPerfis(options);
+      setPerfisOptions(options);
     }
 
     setCongregacaoUser(congregUser);
-    if (cong.name === "ADM") {
-      await login(congregUser);
-    } else {
-      handleShow();
-    }
-    // console.log(congregacaoUser);
+
+    handleShow();
   };
 
   const entrar = async (e) => {
@@ -130,22 +132,36 @@ const Login = () => {
       value: congregacaoUser.accessCode,
     };
 
-    const conON = await getDocWhere("users", where);
-    const id = await getDocWhere("users", where, true);
+    const congregacaoToLog = await getDocWhere("congregacoes", where);
+    const congregacaoId = await getDocWhere("congregacoes", where, true);
 
-    conON.responsible.map((element) => {
-      element.isLoged = false;
+    congregacaoToLog.responsible.map((responsavel) => {
+      if (responsavel.isLoged) {
+        console.log("Já está alguém logado no momento");
+        setError("Já está alguém logado no momento");
+        return;
+      }
     });
 
-    conON.responsible[perfil].isLoged = true;
-    // console.log("2", conON);
+    congregacaoToLog.responsible[perfil].isLoged = true;
 
-    await updateDocument("users", id, conON);
+    await updateDocument("congregacoes", congregacaoId, congregacaoToLog);
+    
 
     await login(congregacaoUser);
   };
 
-  if (dataLoading) {
+  const changeLogMod = () => {
+    if (logMode) {
+      setLogMode(false);
+      setEmail("");
+    } else {
+      setLogMode(true);
+      setEmail("");
+    }
+  };
+
+  if (dataLoading || loading) {
     return <p>Carregando...</p>;
   }
 
@@ -156,46 +172,86 @@ const Login = () => {
     >
       <Card style={{ width: "25rem" }}>
         <Card.Header className="text-center">
-          <CardTitle>
-            <strong>Entrar</strong>
+          <CardTitle className="position-relative p-0">
+            <strong>{!logMode ? "Entrar" : "Entrar ADM"}</strong>
+            <Form.Check // prettier-ignore
+              type="switch"
+              defaultChecked={logMode}
+              id="custom-switch"
+              className="position-absolute top-0 end-0"
+              onChange={() => changeLogMod()}
+            />
           </CardTitle>
         </Card.Header>
+
         <Card.Body>
           <Form onSubmit={handleSubmit}>
-            <Form.Group className="mb-3">
-              <Form.Label>Congregação</Form.Label>
-              <Form.Select
-                aria-label="Congregação"
-                required
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                }}
-              >
-                <option>Escolha a sua congregação</option>
-                {congregacoes}
-              </Form.Select>
-            </Form.Group>
+            {logMode && (
+              <>
+                <Form.Group>
+                  <Form.Label>Email</Form.Label>
+                  <Form.Control
+                    required
+                    type="email"
+                    placeholder="Email"
+                    defaultValue={"email@mail.com"}
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                    }}
+                  />
+                </Form.Group>
 
-            <Form.Group className="d-none">
-              <Form.Label>Password</Form.Label>
-              <Form.Control
-                type="password"
-                placeholder="Password"
-                defaultValue={password}
-              />
-            </Form.Group>
+                <Form.Group className="mt-3 mb-3">
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    required
+                    placeholder="Password"
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                    }}
+                  />
+                </Form.Group>
+              </>
+            )}
+            {!logMode && (
+              <>
+                <Form.Group className="mb-3">
+                  <Form.Label>Congregação</Form.Label>
+                  <Form.Select
+                    aria-label="Congregação"
+                    required
+                    onChange={(e) => {
+                      setEmail(e.target.value);
+                    }}
+                  >
+                    <option value="">Escolha a sua congregação</option>
+                    {congregacoesOptions}
+                  </Form.Select>
+                </Form.Group>
 
-            <Form.Group className="mb-3">
-              <Form.Label>Codigo de Acesso</Form.Label>
-              <Form.Control
-                required
-                title="Digite o código de acesso"
-                defaultValue={accessCode}
-                onChange={(e) => {
-                  setAccessCode(e.target.value);
-                }}
-              />
-            </Form.Group>
+                <Form.Group className="d-none">
+                  <Form.Label>Password</Form.Label>
+                  <Form.Control
+                    type="password"
+                    placeholder="Password"
+                    defaultValue={"!AlgoPraSaber"}
+                  />
+                </Form.Group>
+
+                <Form.Group className="mb-3">
+                  <Form.Label>Codigo de Acesso</Form.Label>
+                  <Form.Control
+                    required
+                    title="Digite o código de acesso"
+                    defaultValue={accessCode}
+                    onChange={(e) => {
+                      setAccessCode(e.target.value);
+                    }}
+                  />
+                </Form.Group>
+              </>
+            )}
 
             {!loading && (
               <Button variant="primary" className="w-100 mb-3" type="submit">
@@ -217,6 +273,7 @@ const Login = () => {
           </Form>
         </Card.Body>
       </Card>
+
       <Modal
         show={show}
         onHide={handleClose}
@@ -239,7 +296,7 @@ const Login = () => {
                 }}
               >
                 <option>Escolha o seu perfil</option>
-                {perfis}
+                {perfisOptions}
               </Form.Select>
             </Form.Group>
             <Button variant="primary" type="submit">

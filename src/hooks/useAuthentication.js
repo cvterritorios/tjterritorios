@@ -10,17 +10,20 @@ import {
 // hooks
 import { useFirestore } from "./useFirestore";
 import { useState, useEffect } from "react";
-import { Navigate } from "react-router-dom";
-import { useInsertDocument } from "./useInsertDocument";
+import { useSessionStorage } from "./useSessionStorage";
 
 export const useAuthentication = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
-  const [uss, setUss] = useState("");
 
-  const { getDocId, getDocWhere, error: dataError } = useFirestore();
+  const {
+    getDocId,
+    getDocWhere,
+    setDocument,
+    error: dataError,
+  } = useFirestore();
 
-  const { insertDocument, response } = useInsertDocument("users");
+  const { setUserInSession, getUser, isAdmin } = useSessionStorage();
 
   useEffect(() => {
     if (dataError) setError(dataError);
@@ -34,47 +37,6 @@ export const useAuthentication = () => {
   function checkIfCancelled() {
     if (cancelled) return;
   }
-
-  // currentUser
-  const current_user = async () => {
-    checkIfCancelled();
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      let cur_user;
-
-      onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          cur_user = await getDocWhere("congregacao", {
-            attr: "uid",
-            comp: "==",
-            value: user.uid,
-          });
-
-          // console.log("1º", user.uid);
-          // console.log("2º", cur_user);
-
-          setUss(cur_user);
-        }
-      });
-    } catch (error) {
-      console.log(error.message);
-      console.log(typeof error.message);
-
-      let systemErrorMessage;
-
-      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
-
-      // console.log(systemErrorMessage);
-
-      setError(systemErrorMessage);
-    }
-
-    setLoading(false);
-    return uss;
-  };
 
   // register
   const createUser = async (data) => {
@@ -90,49 +52,43 @@ export const useAuthentication = () => {
         data.password
       );
 
-      // console.log("1º", user);
+      // console.log("1º", data);
 
-      if (data.name !== "ADM")
-        await updateProfile(user, { displayName: data.name });
+      await updateProfile(user, { displayName: data.name });
 
-      const admUser = await getDocId("adm_now", "9B04i7SLYIpMV9hINolI");
+      const userData = getUser();
 
-      // console.log("2º", admUser);
-
-      const dataCurrent = await getDocWhere("congregacao", {
-        attr: "uid",
-        comp: "==",
-        value: admUser.uid,
-      });
-
-      // console.log("3º", dataCurrent);
-
-      const congregacao = {
-        uid: user.uid,
-        name: user.displayName,
-        email: user.email,
-        accessCode: data.codigoAcesso,
-        responsible: data.responsaveis,
+      const userSession = {
+        email: userData.email,
+        password: isAdmin() ? userData.code : "!AlgoPraSaber",
+        accessCode: isAdmin() ? null : userData.code,
+        adm: isAdmin() ? true : null,
       };
 
-      await insertDocument(congregacao);
+      if (!data.adm) {
+        const congreg = {
+          uid: user.uid,
+          name: data.name,
+          email: data.email,
+          accessCode: data.accessConde,
+          responsible: data.responsible,
+        };
+
+        await setDocument("congregacoes", congreg);
+      }
 
       setTimeout(() => {
         logout();
-        login({
-          email: admUser.email,
-          password: "!AlgoPraSaber",
-          accessCode: dataCurrent.codigoAcesso,
-        });
+        login(userSession);
       }, 300);
 
       setLoading(false);
 
       // console.log("4º", "Suma");
 
-      /*  const loadingScreen = document.getElementById("loading-screen");
-      loadingScreen.classList.add("d-none");
-      loadingScreen.classList.remove("loading"); */
+      //const loadingScreen = document.getElementById("loading-screen");
+      //loadingScreen.classList.add("d-none");
+      //loadingScreen.classList.remove("loading");
 
       return user;
     } catch (error) {
@@ -167,9 +123,23 @@ export const useAuthentication = () => {
     setError(null);
 
     try {
+      if (data.adm) {
+        // alert("Log ADM");
+        setUserInSession({
+          type: "ADM",
+          email: data.email,
+          code: data.password,
+        });
+
+        await signInWithEmailAndPassword(auth, data.email, data.password);
+
+        setLoading(false);
+        return;
+      }
+
       let where = { attr: "accessCode", comp: "==", value: data.accessCode };
 
-      const id = await getDocWhere("users", where, true);
+      const id = await getDocWhere("congregacoes", where, true);
 
       let systemErrorMessage;
 
@@ -181,6 +151,12 @@ export const useAuthentication = () => {
 
         return;
       }
+
+      setUserInSession({
+        type: "Congregacao",
+        email: data.email,
+        code: data.accessCode,
+      });
 
       await signInWithEmailAndPassword(auth, data.email, data.password);
     } catch (error) {
@@ -209,7 +185,6 @@ export const useAuthentication = () => {
   return {
     auth,
     createUser,
-    current_user,
     loading,
     error,
     logout,

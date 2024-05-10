@@ -17,7 +17,7 @@ const Congregacoes = () => {
 
   const getList = async () => {
     setLoading(true);
-    const coll = await getCollectionWhere("congregacao", {
+    const coll = await getCollectionWhere("congregacoes", {
       attr: "nome",
       comp: "!=",
       value: "ADM",
@@ -46,7 +46,10 @@ const Congregacoes = () => {
   return (
     <>
       <Container className="pt-4">
-        <TableDark head={["nome", "email", "codigo"]} lines={lines} />
+        {lines.length < 1 && <p>Não tem nenhuma congregação</p>}
+        {lines.length > 1 && (
+          <TableDark head={["nome", "email", "codigo"]} lines={lines} />
+        )}
         {error ? (
           <Alert variant="danger" onClose={() => setError("")} dismissible>
             <p>{error}</p>

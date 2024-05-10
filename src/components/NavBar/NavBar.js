@@ -14,6 +14,7 @@ import { BsQrCodeScan } from "react-icons/bs";
 import { useEffect, useState } from "react";
 import { useAuthentication } from "../../hooks/useAuthentication";
 import { useFirestore } from "../../hooks/useFirestore";
+import { useSessionStorage } from "../../hooks/useSessionStorage";
 
 // context
 import { useAuthValue } from "../../contexts/AuthContext";
@@ -36,23 +37,24 @@ const NavBar = () => {
   const { user } = useAuthValue();
   const { logout, loading: authLoading } = useAuthentication();
   const { getDocWhere, loading: dataLoading } = useFirestore();
+  const { isAdmin, getUser } = useSessionStorage();
 
   const onDoubleClickHandler = () => {
     handleShowMenu();
   };
 
-  async function getUserNow() {
-    const u = await getDocWhere("users", {
+  async function getCongregacaoNow() {
+    const cong = await getDocWhere("congregacoes", {
       attr: "uid",
       comp: "==",
       value: user.uid,
     });
-    console.warn(u);
-    setUserNow(u);
+    // console.warn(u);
+    setUserNow(cong);
   }
 
   useEffect(() => {
-    if (user) getUserNow();
+    if (user && !isAdmin()) getCongregacaoNow();
   }, [user]);
 
   if (authLoading || dataLoading) {
@@ -104,7 +106,7 @@ const NavBar = () => {
           }
           <div className="d-flex align-items-center menu-items">
             {user ? (
-              userNow.name === "Adm" || userNow.name === "ADM" ? (
+              isAdmin() ? (
                 <>
                   <NavLink to="/register" className="navlink">
                     Registar
