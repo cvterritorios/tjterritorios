@@ -8,10 +8,6 @@ import {
   CardTitle,
   Alert,
 } from "react-bootstrap";
-import { getAuth, onAuthStateChanged } from "firebase/auth";
-
-// context
-import { useAuthValue } from "../../contexts/AuthContext";
 
 //hooks
 import { useState, useEffect } from "react";
@@ -19,15 +15,15 @@ import { useAuthentication } from "../../hooks/useAuthentication";
 import { useFirestore } from "../../hooks/useFirestore";
 
 const Register = () => {
-  const [email, setEmail] = useState("email@gmail.com");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("!AlgoPraSaber");
   const [passwordConfirm, setPasswordConfirm] = useState("");
-  const [name, setName] = useState("Congregação");
-  const [responsavelName, setResponsavelName] = useState("Servo");
+  const [name, setName] = useState("");
+  const [responsavelName, setResponsavelName] = useState("");
   const [responsavelPass, setResponsavelPass] = useState("");
   const [responsavelPassConfirm, setResponsavelPassConfirm] = useState("");
-  const [accessConde, setAccessConde] = useState("Covi1234");
-  const [accessCondeConfim, setAccessCondeConfim] = useState("Covi1234");
+  const [accessConde, setAccessConde] = useState("");
+  const [accessCondeConfim, setAccessCondeConfim] = useState("");
   const [error, setError] = useState("");
   const [registerLoading, setRegisterLoading] = useState("");
 

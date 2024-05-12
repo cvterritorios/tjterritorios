@@ -6,7 +6,7 @@ const Footer = () => {
       <footer
         className="d-flex align-items-center pt-4 justify-content-center"
         style={{
-          height: 100,
+          height: "100",
           flexDirection: "column",
           backgroundColor: "#edf3f6",
         }}

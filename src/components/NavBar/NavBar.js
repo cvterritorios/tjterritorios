@@ -37,7 +37,7 @@ const NavBar = () => {
   const { user } = useAuthValue();
   const { logout, loading: authLoading } = useAuthentication();
   const { getDocWhere, loading: dataLoading } = useFirestore();
-  const { isAdmin, getUser } = useSessionStorage();
+  const { isAdmin } = useSessionStorage();
 
   const onDoubleClickHandler = () => {
     handleShowMenu();

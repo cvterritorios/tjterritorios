@@ -43,7 +43,9 @@ const App = () => {
     <>
       <AuthProvider value={{ user }}>
         <BrowserRouter>
-          <NavBar />
+        
+        <div className="bg-gray m-0 p-0 h-auto">
+           <NavBar />
           <div className="contentor">
             <Routes>
               <Route
@@ -85,14 +87,11 @@ const App = () => {
               />
             </Routes>
           </div>
-          <Footer />
+          <Footer/>
+        </div>
+         
         </BrowserRouter>
       </AuthProvider>
-      <div id="loading-screen" className="d-none">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
-      </div>
     </>
   );
 };

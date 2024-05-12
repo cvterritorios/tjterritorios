@@ -23,7 +23,6 @@ const Login = () => {
   const [logMode, setLogMode] = useState(false);
 
   const [congregacaoUser, setCongregacaoUser] = useState("");
-  const [congregacao, setCongregacao] = useState("");
   const [perfil, setPerfil] = useState("");
 
   // Options
@@ -70,13 +69,7 @@ const Login = () => {
 
     setError(null);
 
-    /* [
-      "matt",
-      "mattkassoll@gmail.com",
-      "cvterritorios1958",
-      "covilhaterritorios1958@gmail.com",
-    ]; 
-    
+    /* 
     console.log(congregacaoUser, await congregacaoId);
     return;
     */
@@ -194,7 +187,7 @@ const Login = () => {
                     required
                     type="email"
                     placeholder="Email"
-                    defaultValue={"email@mail.com"}
+                    defaultValue={email}
                     onChange={(e) => {
                       setEmail(e.target.value);
                     }}

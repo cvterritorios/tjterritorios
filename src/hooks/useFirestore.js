@@ -55,6 +55,12 @@ export const useFirestore = () => {
     try {
       const res = await addDoc(collection(db, collect), data);
 
+      //se a coleção for congregacoes, fazer um update no documento com o id do documento
+      if (collect === "congregacoes") {
+        const dat = { id: res.id, ...data };
+        await updateDoc(doc(db, collect, res.id), dat);
+      }
+
       validate("end");
       return res;
     } catch (error) {

@@ -12,7 +12,9 @@ const Home = () => {
   return (
     <>
       <ToolsBar create={handleShow} />
-      
+
+      {""}
+
       <Modal
         size="sm"
         show={show}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Card, Button, Row, Col } from "react-bootstrap";
 import { MdOutlineDelete, MdOutlineEdit } from "react-icons/md";
+import ListGroupH from "../ListGroupH/ListGroupH";
 
 const CardCongregacaoFlip = (props) => {
   const [flip, setFlip] = useState(false);
@@ -54,9 +55,7 @@ const CardCongregacaoFlip = (props) => {
                   <Col>
                     <strong>Responsaveis</strong>
                     <br />
-                    {congregacao.responsible.map((e) => (
-                      <div className="bg-light">{e.name} </div>
-                    ))}
+                    {<ListGroupH list={congregacao.responsible} />}
                   </Col>
                 </Row>
               </Card.Text>
@@ -69,10 +68,7 @@ const CardCongregacaoFlip = (props) => {
               <Button variant="outline-primary" className="btn-sm ">
                 <MdOutlineEdit size={20} />
               </Button>{" "}
-              <Button
-                variant="outline-danger"
-                className="btn-sm "
-              >
+              <Button variant="outline-danger" className="btn-sm ">
                 <MdOutlineDelete size={20} />
               </Button>
             </Row>
