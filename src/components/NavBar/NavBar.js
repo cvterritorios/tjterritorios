@@ -164,29 +164,46 @@ const NavBar = () => {
           >
             <Modal.Body>
               <Modal.Title>Informações do perfil</Modal.Title>
-              <Card>
-                <Row>
-                  <Col xs={7} md={5}>
-                    <strong>Congregação:</strong>
-                    <span> {userNow.name}</span>
-                  </Col>
-                  {userNow.responsible &&
-                    userNow.responsible.map((element, idx) =>
-                      element.isLoged ? (
-                        <Col xs={7} md={5} key={idx}>
-                          <strong>Perfil:</strong>
-                          <span> {element.name}</span>
-                        </Col>
-                      ) : (
-                        ""
-                      )
-                    )}
-                </Row>
-                <div xs={12} md={8}>
-                  <strong>Email:</strong>
-                  <span> {userNow.email}</span>
-                </div>
-              </Card>
+              {!isAdmin() && (
+                <Card>
+                  <Row>
+                    <Col xs={7} md={5}>
+                      <strong>Congregação:</strong>
+                      <span> {userNow.name}</span>
+                    </Col>
+                    {userNow.responsible &&
+                      userNow.responsible.map((element, idx) =>
+                        element.isLoged ? (
+                          <Col xs={7} md={5} key={idx}>
+                            <strong>Perfil:</strong>
+                            <span> {element.name}</span>
+                          </Col>
+                        ) : (
+                          ""
+                        )
+                      )}
+                  </Row>
+                  <div xs={12} md={8}>
+                    <strong>Email:</strong>
+                    <span> {userNow.email}</span>
+                  </div>
+                </Card>
+              )}
+
+              {isAdmin() && (
+                <Card>
+                  <Row>
+                    <Col xs={7} md={5}>
+                      <strong>Nome:</strong>
+                      <span> {user.displayName}</span>
+                    </Col>
+                  </Row>
+                  <div xs={12} md={8}>
+                    <strong>Email:</strong>
+                    <span> {user.email}</span>
+                  </div>
+                </Card>
+              )}
               <Button variant="danger" onClick={logout}>
                 Sair
               </Button>

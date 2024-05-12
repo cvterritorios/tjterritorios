@@ -34,6 +34,11 @@ const Register = () => {
   const [regMode, setRegMode] = useState(false);
 
   const { createUser, error: authError, loading } = useAuthentication();
+  const {
+    getDocWhere,
+    error: dataError,
+    loading: dataLoading,
+  } = useFirestore();
 
   useEffect(() => {
     if (authError) setError(authError);
@@ -53,6 +58,25 @@ const Register = () => {
 
     setError(null);
     setRegisterLoading(true);
+    setName(name.toLocaleUpperCase());
+
+    // --------- ---------- Validação Email
+
+    const isCongragationEmail = await getDocWhere("congregacoes", {
+      attr: "email",
+      comp: "==",
+      value: email,
+    });
+
+    if (isCongragationEmail) {
+      setError("Este email já está a ser usado ");
+      console.log("Este email já está a ser usado ");
+
+      setRegisterLoading(false);
+      return;
+    }
+
+    // --------- ---------- Log Adm
 
     if (regMode) {
       if (password !== passwordConfirm) {
@@ -63,19 +87,38 @@ const Register = () => {
         return;
       }
 
-      await createUser({ email, password, adm: true });
+      await createUser({ name, email, password, adm: true });
     }
 
-    /* if (accessConde !== accessCondeConfim) {
+    // --------- ---------- Validação Codigo de acesso
+
+    if (accessConde !== accessCondeConfim) {
       setError("Confirme o codigo de acesso!");
       console.log("Confirme o codigo de acesso!");
+
       setRegisterLoading(false);
-
       return;
-    } */
+    }
 
+    // --------- ---------- Validação Nome
+
+    const isCongragationName = await getDocWhere("congregacoes", {
+      attr: "name",
+      comp: "==",
+      value: name,
+    });
+
+    if (isCongragationName) {
+      setError("Já existe uma congregação com este nome");
+      console.log("Já existe uma congregação com este nome");
+
+      setRegisterLoading(false);
+      return;
+    }
+
+    // --------- ---------- Constante Congregação
     const congregacaoUser = {
-      name: name.toLocaleUpperCase(),
+      name,
       email,
       password,
       accessConde,
@@ -84,10 +127,11 @@ const Register = () => {
       ],
     };
 
+    // --------- ---------- Criar congregação
     const res = await createUser(congregacaoUser);
-    setRegisterLoading(false);
 
-    console.log(res);
+    setRegisterLoading(false);
+    // console.log(res);
   };
 
   const changeRegMod = () => {

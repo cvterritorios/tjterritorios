@@ -101,6 +101,7 @@ export const useAuthentication = () => {
         systemErrorMessage = "E-mail já cadastrado.";
       } else {
         systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
+        console.log("Ocorreu um erro, por favor tenta mais tarde.");
       }
 
       setError(systemErrorMessage);

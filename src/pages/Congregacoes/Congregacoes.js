@@ -1,32 +1,45 @@
 import { useEffect, useState } from "react";
-import TableDark from "../../components/Table/Table";
-import { useFirestore } from "../../hooks/useFirestore";
 import { Alert, Container } from "react-bootstrap";
 
+// My Hooks
+import { useFirestore } from "../../hooks/useFirestore";
+
+// Components
+import TableDark from "../../components/Table/Table";
+import { CardCongregacaoFlip } from "../../components/Cards/Cards";
+
 const Congregacoes = () => {
-  const [myList, setMyList] = useState([]);
+  const [header] = useState([
+    "Nome",
+    "Email",
+    "Codigo de Acesso",
+    "Nº - Responsaveis",
+  ]);
   const [lines, setLines] = useState([[]]);
+  const [congregacoesData, setCongregacoesData] = useState([{}]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(false);
 
   const {
     getCollectionWhere,
+    getCollection,
     loading: loadingData,
     error: errorData,
   } = useFirestore();
 
   const getList = async () => {
     setLoading(true);
-    const coll = await getCollectionWhere("congregacoes", {
-      attr: "nome",
-      comp: "!=",
-      value: "ADM",
-    });
-    setMyList(coll);
+    const coll = await getCollection("congregacoes");
+    setCongregacoesData(coll);
 
     let array = [];
     coll.map((item) => {
-      let arr = [item.nome, item.email, item.codigoAcesso];
+      let arr = [
+        item.name,
+        item.email,
+        item.accessCode,
+        item.responsible.length + " " + item.responsible.map((e) => e.name),
+      ];
       array.push(arr);
     });
 
@@ -39,6 +52,12 @@ const Congregacoes = () => {
     if (errorData) setError(errorData);
   }, [errorData]);
 
+  const handleDelete = (uid) => {
+    console.log(uid,"Has Deletedd");
+  };
+
+  const handleEdit = (uid) => {};
+
   if (loading || loadingData) {
     return <p>Carregando...</p>;
   }
@@ -47,9 +66,8 @@ const Congregacoes = () => {
     <>
       <Container className="pt-4">
         {lines.length < 1 && <p>Não tem nenhuma congregação</p>}
-        {lines.length > 1 && (
-          <TableDark head={["nome", "email", "codigo"]} lines={lines} />
-        )}
+        {/*  {lines.length > 1 && <TableDark head={header} lines={lines} />} */}
+        <CardCongregacaoFlip congregacoes={congregacoesData} onDelete={handleDelete} onEdit={handleEdit} />
         {error ? (
           <Alert variant="danger" onClose={() => setError("")} dismissible>
             <p>{error}</p>
