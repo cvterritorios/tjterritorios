@@ -37,7 +37,7 @@ const NavBar = () => {
   const { user } = useAuthValue();
   const { logout, loading: authLoading } = useAuthentication();
   const { getDocWhere, loading: dataLoading } = useFirestore();
-  const { isAdmin } = useSessionStorage();
+  const { isAdmin, setUserInSession } = useSessionStorage();
 
   const onDoubleClickHandler = () => {
     handleShowMenu();
@@ -54,7 +54,15 @@ const NavBar = () => {
   }
 
   useEffect(() => {
-    if (user && !isAdmin()) getCongregacaoNow();
+    if (user) {
+      setUserInSession({
+        type: user.displayName.includes("ADM") ? "ADM" : "Congregacao",
+        email: user.email,
+        code: "",
+      });
+      if (!isAdmin()) getCongregacaoNow();
+    } else {
+    }
   }, [user]);
 
   if (authLoading || dataLoading) {

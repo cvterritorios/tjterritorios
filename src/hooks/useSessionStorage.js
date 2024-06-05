@@ -27,7 +27,9 @@ export const useSessionStorage = () => {
   };
 
   const isAdmin = () => {
-    return sessionStorage.getItem("userType").includes("ADM");
+    setUserInSession({ type: "null", code: "null", email: "null" });
+
+    return sessionStorage.getItem("userType").includes("ADM") ? true : false;
   };
 
   // functions - gets
