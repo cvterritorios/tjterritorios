@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Table from "react-bootstrap/Table";
 
-const TableDark = (props) => {
+const TableDark = ({ head, lines }) => {
   useEffect(() => {}, []);
 
   return (
@@ -9,13 +9,13 @@ const TableDark = (props) => {
       <thead>
         <tr>
           <th>#</th>
-          {props.head.map((element, index) => (
+          {head.map((element, index) => (
             <th key={index}>{element}</th>
           ))}
         </tr>
       </thead>
       <tbody>
-        {props.lines.map((line, index) => (
+        {lines.map((line, index) => (
           <tr key={index}>
             <td>{index + 1}</td>
             {line.map((element, idx) => (

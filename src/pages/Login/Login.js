@@ -39,9 +39,6 @@ const Login = () => {
     loading: dataLoading,
   } = useFirestore();
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
-
   useEffect(() => {
     if (authError) setError(authError);
     if (dataError) setError(dataError);
@@ -52,7 +49,7 @@ const Login = () => {
   const makeCongregacoesOptions = async () => {
     const myList = await getCollection("congregacoes");
 
-    const options = myList.map((congregacao) => {
+    const options = myList?.map((congregacao) => {
       return (
         <option key={congregacao.id} value={congregacao.email}>
           {congregacao.name}
@@ -74,7 +71,6 @@ const Login = () => {
     return;
     */
 
-
     if (logMode) {
       await login({ email, password, adm: true });
     }
@@ -84,7 +80,7 @@ const Login = () => {
       password,
       accessCode,
     };
-    
+
     //buscar congregação pelo codigo de acesso
     const cong = await getDocWhere("congregacoes", {
       attr: "accessCode",
@@ -113,7 +109,7 @@ const Login = () => {
 
     setCongregacaoUser(congregUser);
 
-    handleShow();
+    setShow(true);
   };
 
   const entrar = async (e) => {
@@ -139,7 +135,6 @@ const Login = () => {
     congregacaoToLog.responsible[perfil].isLoged = true;
 
     await updateDocument("congregacoes", congregacaoId, congregacaoToLog);
-    
 
     await login(congregacaoUser);
   };
@@ -269,7 +264,9 @@ const Login = () => {
 
       <Modal
         show={show}
-        onHide={handleClose}
+        onHide={() => {
+          setShow(false);
+        }}
         keyboard={false}
         backdrop="static"
         centered

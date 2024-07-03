@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Container } from "react-bootstrap";
+import { Alert, Card, Col, Container, Row } from "react-bootstrap";
 
 // My Hooks
 import { useFirestore } from "../../hooks/useFirestore";
@@ -13,7 +13,6 @@ const Congregacoes = () => {
   const [error, setError] = useState(false);
 
   const {
-    getCollectionWhere,
     getCollection,
     loading: loadingData,
     error: errorData,
@@ -46,11 +45,10 @@ const Congregacoes = () => {
     <>
       <Container className="pt-4">
         {congregacoesData.length < 1 && <p>Não tem nenhuma congregação</p>}
-        <CardCongregacaoFlip
-          congregacoes={congregacoesData}
-          onDelete={handleDelete}
-          onEdit={handleEdit}
-        />
+        {""}
+        {congregacoesData?.map((congregacao) => (
+          <CardCongregacaoFlip data={{ ...congregacao }}/>
+        ))}{" "}
         {error ? (
           <Alert variant="danger" onClose={() => setError("")} dismissible>
             <p>{error}</p>

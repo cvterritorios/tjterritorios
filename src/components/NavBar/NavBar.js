@@ -27,20 +27,15 @@ const NavBar = () => {
   const [show, setShow] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [userNow, setUserNow] = useState("");
-
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
-
-  const handleCloseMenu = () => setShowMenu(false);
-  const handleShowMenu = () => setShowMenu(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const { user } = useAuthValue();
   const { logout, loading: authLoading } = useAuthentication();
-  const { getDocWhere, loading: dataLoading } = useFirestore();
-  const { isAdmin, setUserInSession } = useSessionStorage();
+  const { getDocWhere, getCollection, loading: dataLoading } = useFirestore();
+  const { isAdmin: isADM } = useSessionStorage();
 
   const onDoubleClickHandler = () => {
-    handleShowMenu();
+    setShowMenu(true);
   };
 
   async function getCongregacaoNow() {
@@ -55,15 +50,27 @@ const NavBar = () => {
 
   useEffect(() => {
     if (user) {
-      setUserInSession({
-        type: user.displayName.includes("ADM") ? "ADM" : "Congregacao",
-        email: user.email,
-        code: "",
-      });
-      if (!isAdmin()) getCongregacaoNow();
-    } else {
+      isAdminNow();
+      if (!isAdmin) getCongregacaoNow();
     }
   }, [user]);
+
+  const isAdminNow = async () => {
+    const adminList = await getCollection("admins").then((res) => {
+      return res[0].list;
+    });
+
+    checkAdmInList(adminList);
+
+    function checkAdmInList(list) {
+      list.forEach((adm) => {
+        if (adm == user?.displayName) {
+          setIsAdmin(true);
+          console.log(adm);
+        }
+      });
+    }
+  };
 
   if (authLoading || dataLoading) {
     return <p>Carregando...</p>;
@@ -114,7 +121,7 @@ const NavBar = () => {
           }
           <div className="d-flex align-items-center menu-items">
             {user ? (
-              isAdmin() ? (
+              isAdmin ? (
                 <>
                   <NavLink to="/register" className="navlink">
                     Registar
@@ -137,7 +144,7 @@ const NavBar = () => {
                     margin: "8px",
                     cursor: "pointer",
                   }}
-                  onClick={handleShow}
+                  onClick={() => setShow(true)}
                   size={"1.8rem"}
                 />
               </a>
@@ -151,7 +158,7 @@ const NavBar = () => {
           {/* Modal QRCode */}
           <Modal
             show={show}
-            onHide={handleClose}
+            onHide={() => setShow(false)}
             backdrop="static"
             keyboard={false}
             centered
@@ -166,21 +173,21 @@ const NavBar = () => {
           {/* Modal Info */}
           <Modal
             show={showMenu}
-            onHide={handleCloseMenu}
+            onHide={() => setShowMenu(false)}
             keyboard={false}
             style={{ maxHeight: "100vh" }}
           >
             <Modal.Body>
               <Modal.Title>Informações do perfil</Modal.Title>
-              {!isAdmin() && (
+              {!isAdmin && (
                 <Card>
                   <Row>
                     <Col xs={7} md={5}>
                       <strong>Congregação:</strong>
-                      <span> {userNow.name}</span>
+                      <span> {userNow?.name}</span>
                     </Col>
-                    {userNow.responsible &&
-                      userNow.responsible.map((element, idx) =>
+                    {userNow?.responsible &&
+                      userNow?.responsible.map((element, idx) =>
                         element.isLoged ? (
                           <Col xs={7} md={5} key={idx}>
                             <strong>Perfil:</strong>
@@ -193,12 +200,12 @@ const NavBar = () => {
                   </Row>
                   <div xs={12} md={8}>
                     <strong>Email:</strong>
-                    <span> {userNow.email}</span>
+                    <span> {userNow?.email}</span>
                   </div>
                 </Card>
               )}
 
-              {isAdmin() && (
+              {isAdmin && (
                 <Card>
                   <Row>
                     <Col xs={7} md={5}>

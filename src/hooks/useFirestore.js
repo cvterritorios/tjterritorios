@@ -24,7 +24,7 @@ export const useFirestore = () => {
     if (cancelled) return;
   }
 
-  async function getDoscsQuery(q) {
+  async function getDocsQuery(q) {
     let collect = [];
     const querySnapshot = await getDocs(q);
 
@@ -136,7 +136,7 @@ export const useFirestore = () => {
         where(whr.attr, whr.comp, whr.value)
       );
 
-      const res = await getDoscsQuery(q);
+      const res = await getDocsQuery(q);
 
       validate("end");
       if (id) {
@@ -167,7 +167,7 @@ export const useFirestore = () => {
     try {
       const q = query(collection(db, collect));
 
-      const res = await getDoscsQuery(q);
+      const res = await getDocsQuery(q);
 
       validate("end");
       return res;
@@ -202,7 +202,7 @@ export const useFirestore = () => {
         where(whr.attr, whr.comp, whr.value)
       );
 
-      const res = await getDoscsQuery(q);
+      const res = await getDocsQuery(q);
 
       validate("end");
       return res;
