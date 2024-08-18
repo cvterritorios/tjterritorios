@@ -4,7 +4,7 @@ import { useFirestore } from "../../hooks/useFirestore";
 import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 
-const Bandeja = ({ viewGrid }) => {
+const Bandeja = ({ viewGrid, filter = [] }) => {
   const [collection, setCollection] = useState([]);
 
   const [error, setError] = useState(false);
@@ -12,24 +12,39 @@ const Bandeja = ({ viewGrid }) => {
 
   const {
     getCollection,
+    getCollectionWhere,
     error: dataError,
     loading: dataLoading,
   } = useFirestore();
 
   const startBandeja = async () => {
     setLoading(true);
-    const coll = await getCollection("territorios");
-    setCollection(coll);
 
-    console.log(collection);
-
+    if (filter[0]) {
+      const coll = await getCollectionWhere("territorios", {
+        attr: "available",
+        comp: "==",
+        value: true,
+      });
+      setCollection(coll);
+    } else if (filter[1]) {
+      const coll = await getCollectionWhere("territorios", {
+        attr: "available",
+        comp: "==",
+        value: false,
+      });
+      setCollection(coll);
+    } else {
+      const coll = await getCollection("territorios");
+      setCollection(coll);
+    }
     setLoading(false);
   };
 
   useEffect(() => {
     startBandeja();
     if (error) setError(error);
-  }, [error]);
+  }, [error, filter]);
 
   if (loading) {
     <p>carregando..</p>;
@@ -38,19 +53,13 @@ const Bandeja = ({ viewGrid }) => {
   if (!viewGrid) {
     return (
       <>
-        <Container className="flex flex-wrap lg:justify-between space-y-2 justify-center ">
+        <Container className="flex flex-wrap lg:justify-between justify-center ">
           {collection.map((item, idx) => (
-            <div id={item.id} key={idx}>
-              <Card
-                className="border border-end-0 border-start-0 rounded-0 "
-                style={{
-                  width: "25rem",
-                  height: "6rem",
-                }}
-              >
+            <div id={item.id} key={idx} className="m-1">
+              <Card className="border border-end-0 border-start-0 rounded-0 w-[25rem] h-[6rem]">
                 <Card.Body className="text-center ">
                   <Row className="">
-                    <Col xs={3} className="bg-green-700 p-0 h-full">
+                    <Col xs={3} className="p-0 h-full">
                       <Card.Img
                         className="h-16 w-full hover:cursor-pointer"
                         variant="top"
@@ -114,16 +123,10 @@ const Bandeja = ({ viewGrid }) => {
 
   return (
     <>
-      <Container className="flex flex-wrap lg:justify-between space-y-2 justify-center ">
+      <Container className="flex flex-wrap lg:justify-between justify-center ">
         {collection.map((item, idx) => (
-          <div id={item.id} key={idx}>
-            <Card
-              className="border rounded "
-              style={{
-                width: "20rem",
-                height: "20rem",
-              }}
-            >
+          <div id={item.id} key={idx} className="m-1">
+            <Card className="border rounded md:w-[20rem] md:h-[20rem]">
               <Card.Body className="text-center h-full">
                 <Row className="h-1/2">
                   <Card.Img
@@ -165,8 +168,12 @@ const Bandeja = ({ viewGrid }) => {
                 </Row>
                 Observações
                 <Row className="w-full flex mx-1" name="obserations">
-                  {item.observation && <p className="ml-1 text-start">{item.observation}</p>}
-                  {!item.observation && <p className="ml-1 text-start">Sem observações</p>}
+                  {item.observation && (
+                    <p className="ml-1 text-start">{item.observation}</p>
+                  )}
+                  {!item.observation && (
+                    <p className="ml-1 text-start">Sem observações</p>
+                  )}
                 </Row>
               </Card.Body>
             </Card>

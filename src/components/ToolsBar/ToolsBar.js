@@ -22,6 +22,8 @@ import Bandeja from "../../containers/Bandeja/Bandeja";
 const ToolsBar = (action) => {
   const [searchTxt, setSearchTxt] = useState("");
   const [viewMode, setViewMode] = useState(false);
+  const [isFilterUn, setIsFilterAn] = useState(false);
+  const [isFilterAv, setIsFilterAv] = useState(false);
   const [collection, setCollection] = useState([{}]);
 
   const [error, setError] = useState(false);
@@ -75,11 +77,37 @@ const ToolsBar = (action) => {
           <DropdownButton
             variant="secondary"
             as={ButtonGroup}
-            style={{ border: "none", boxDecorationBreak: false }}
             title={<MdOutlineFilterList />}
           >
-            <Dropdown.Item eventKey="1">Filtrar 1</Dropdown.Item>
-            <Dropdown.Item eventKey="2">Filtrar 3</Dropdown.Item>
+            <Dropdown.Item
+              eventKey="1"
+              onClick={() => {
+                setIsFilterAv(false);
+                setIsFilterAn(false);
+              }}
+            >
+              Todos
+            </Dropdown.Item>
+            <Dropdown.Item
+              eventKey="2"
+              active={isFilterAv}
+              onClick={() => {
+                setIsFilterAv(true);
+                setIsFilterAn(false);
+              }}
+            >
+              Disponivel
+            </Dropdown.Item>
+            <Dropdown.Item
+              eventKey="3"
+              active={isFilterUn}
+              onClick={() => {
+                setIsFilterAn(true);
+                setIsFilterAv(false);
+              }}
+            >
+              Indisponivel
+            </Dropdown.Item>
           </DropdownButton>
 
           <Button
@@ -124,7 +152,7 @@ const ToolsBar = (action) => {
         </ButtonGroup>
       </Container>
 
-      <Bandeja viewGrid={viewMode} />
+      <Bandeja viewGrid={viewMode} filter={[isFilterAv, isFilterUn]} />
     </>
   );
 };
