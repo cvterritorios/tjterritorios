@@ -4,7 +4,7 @@ import { useFirestore } from "../../hooks/useFirestore";
 import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 
-const Bandeja = ({ viewGrid, filter = [] }) => {
+const Bandeja = ({ viewGrid, filter = [], searching }) => {
   const [collection, setCollection] = useState([]);
 
   const [error, setError] = useState(false);
@@ -19,6 +19,17 @@ const Bandeja = ({ viewGrid, filter = [] }) => {
 
   const startBandeja = async () => {
     setLoading(true);
+
+    if (searching) {
+      const coll = await getCollectionWhere("territorios", {
+        attr: "description",
+        comp: "==",
+        value: searching,
+      });
+      setCollection(coll);
+      setLoading(false);
+      return;
+    }
 
     if (filter[0]) {
       const coll = await getCollectionWhere("territorios", {
@@ -44,10 +55,14 @@ const Bandeja = ({ viewGrid, filter = [] }) => {
   useEffect(() => {
     startBandeja();
     if (error) setError(error);
-  }, [error, filter]);
+  }, [error, filter, searching]);
 
   if (loading) {
     <p>carregando..</p>;
+  }
+
+  if(collection.length < 1){
+    <p>Nenhum territorio encontrados</p>
   }
 
   if (!viewGrid) {

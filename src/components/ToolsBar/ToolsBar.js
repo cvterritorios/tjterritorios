@@ -24,43 +24,18 @@ const ToolsBar = (action) => {
   const [viewMode, setViewMode] = useState(false);
   const [isFilterUn, setIsFilterAn] = useState(false);
   const [isFilterAv, setIsFilterAv] = useState(false);
-  const [collection, setCollection] = useState([{}]);
-
-  const [error, setError] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  const {
-    getCollection,
-    error: dataError,
-    loading: dataLoading,
-  } = useFirestore();
-
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    console.log(searchTxt);
-  };
-
-  useEffect(() => {
-    if (dataError) setError(dataError);
-    if (dataLoading) setLoading(dataLoading);
-    if (viewMode) {
-      console.log("Grid");
-    }
-  }, [dataError, dataLoading, viewMode]);
 
   return (
     <>
       <Container className="my-3 text-center">
-        <Form className="flex" onSubmit={handleSearch}>
-          <Form.Control
-            type="search"
-            placeholder="Pesquisar"
-            aria-label="Pesquisar"
-            onChange={(e) => {
-              setSearchTxt(e.target.value);
-            }}
-          />
-        </Form>
+        <Form.Control
+          type="search"
+          placeholder="Pesquisar"
+          aria-label="Pesquisar"
+          onChange={(e) => {
+            setSearchTxt(e.target.value);
+          }}
+        />
 
         <ButtonGroup aria-label="toolsbar" className="my-3 h-10">
           <Button className="border-0 bg-gray-500 hover:bg-gray-500"></Button>
@@ -121,7 +96,7 @@ const ToolsBar = (action) => {
           <ButtonGroup>
             <MdFormatListBulleted
               size={38}
-              className="text-light py-2 h-10 border-0 bg-gray-500 hover:bg-gray-500"
+              className="text-light py-2 h-10 border-0 bg-gray-500 hover:bg-gray-600/90"
               title="Vista em lista"
               onClick={() => {
                 setViewMode(false);
@@ -140,7 +115,7 @@ const ToolsBar = (action) => {
 
             <MdGridView
               size={38}
-              className="text-light py-2 h-10 border-0 bg-gray-500 hover:bg-gray-500"
+              className="text-light py-2 h-10 border-0 bg-gray-500 hover:bg-gray-600/90"
               title="Vista em grade"
               onClick={() => {
                 setViewMode(true);
@@ -152,7 +127,7 @@ const ToolsBar = (action) => {
         </ButtonGroup>
       </Container>
 
-      <Bandeja viewGrid={viewMode} filter={[isFilterAv, isFilterUn]} />
+      <Bandeja viewGrid={viewMode} filter={[isFilterAv, isFilterUn]} searching={searchTxt} />
     </>
   );
 };
