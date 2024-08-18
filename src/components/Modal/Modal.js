@@ -75,7 +75,7 @@ const MyModal = (modal) => {
     // handleSubmit Novo Territorio
     const handleSubmit = async (e) => {
       e.preventDefault();
-      console.log(myFile)
+      console.log(myFile);
 
       const territories = {
         description: description, // to validate
@@ -92,17 +92,8 @@ const MyModal = (modal) => {
 
       // add territories to firestore, if true, add image to storage
       console.log(territories);
-      const response = await setTerritories(territories,myFile);
-      /* // refresh page
-      if (response) window.location.reload();
-      else {
-        // clear all states
-        setImage(null);
-        setLinkImg("");
-        setDescription("");
-        setReferencias([]);
-        setObservation("");
-      } */
+      await setTerritories(territories, myFile);
+      
     };
 
     return (

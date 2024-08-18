@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Container, Card, Row, Col, Badge } from "react-bootstrap";
+import { Container, Card, Row, Col, Badge, Button } from "react-bootstrap";
 import { useFirestore } from "../../hooks/useFirestore";
+import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
+import { HiOutlineDotsVertical } from "react-icons/hi";
 
-const Bandeja = () => {
-  const [collection, setCollection] = useState([{}]);
+const Bandeja = ({ viewGrid }) => {
+  const [collection, setCollection] = useState([]);
 
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -15,36 +17,156 @@ const Bandeja = () => {
   } = useFirestore();
 
   const startBandeja = async () => {
-    if (!collection) setCollection(await getCollection("territorios"));
+    setLoading(true);
+    const coll = await getCollection("territorios");
+    setCollection(coll);
+
+    console.log(collection);
+
+    setLoading(false);
   };
 
   useEffect(() => {
     startBandeja();
-    if (dataError) setError(dataError);
-    if (dataLoading) setLoading(dataLoading);
-  }, [dataError, dataLoading]);
+    if (error) setError(error);
+  }, [error]);
 
   if (loading) {
     <p>carregando..</p>;
   }
 
+  if (!viewGrid) {
+    return (
+      <>
+        <Container className="flex flex-wrap lg:justify-between space-y-2 justify-center ">
+          {collection.map((item, idx) => (
+            <div id={item.id} key={idx}>
+              <Card
+                className="border border-end-0 border-start-0 rounded-0 "
+                style={{
+                  width: "25rem",
+                  height: "6rem",
+                }}
+              >
+                <Card.Body className="text-center ">
+                  <Row className="">
+                    <Col xs={3} className="bg-green-700 p-0 h-full">
+                      <Card.Img
+                        className="h-16 w-full hover:cursor-pointer"
+                        variant="top"
+                        src={item.map}
+                      ></Card.Img>
+                    </Col>
+                    <Col className="px-1">
+                      <Row className="justify-between flex">
+                        <Col
+                          xs={5}
+                          className="font-bold text-base text-start ml-2 hover:cursor-pointer"
+                          name="Description"
+                        >
+                          {item.description}
+                        </Col>
+                        <Col className="" name="availeble">
+                          <div className="text-start text-base">
+                            {item.available ? (
+                              <span class="text-success flex items-center">
+                                Disponivel <GrStatusGood className="ml-1" />
+                              </span>
+                            ) : (
+                              <span class="text-danger flex items-center">
+                                Indisponivel{" "}
+                                <GrStatusCritical className="ml-1" />
+                              </span>
+                            )}
+                          </div>
+                        </Col>
+                        <Col xs={1} className="p-0 h-full" name="dotmenu">
+                          <Button
+                            variant="outline-light"
+                            className="border-0"
+                            size="sm"
+                          >
+                            <HiOutlineDotsVertical size={20} color="black" />
+                          </Button>
+                        </Col>
+                      </Row>
+                      <Row className="w-full flex m-2" name="references">
+                        {item.references.map((ref, idx) => (
+                          <Badge
+                            bg="light"
+                            text="dark"
+                            className={"ml-2 border w-fit "}
+                          >
+                            {ref}
+                          </Badge>
+                        ))}
+                      </Row>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </Card>
+            </div>
+          ))}
+        </Container>
+      </>
+    );
+  }
+
   return (
     <>
-      <Container>
+      <Container className="flex flex-wrap lg:justify-between space-y-2 justify-center ">
         {collection.map((item, idx) => (
-          <div className="col-md-auto p-0" id={item.ID} key={idx}>
+          <div id={item.id} key={idx}>
             <Card
-              className="border border-end-0 border-start-0 rounded-0"
+              className="border rounded "
               style={{
-                width: "23.66rem",
+                width: "20rem",
+                height: "20rem",
               }}
             >
-              <Card.Body className="text-center">
-                <Row>
-                  <Col xs={2} className="bg-success p-0 d-flex">
-                    <Card.Img variant="top" src={item.mapa}></Card.Img>
+              <Card.Body className="text-center h-full">
+                <Row className="h-1/2">
+                  <Card.Img
+                    className="h-full w-full hover:cursor-pointer"
+                    variant="top"
+                    src={item.map}
+                  ></Card.Img>
+                </Row>
+                <Row className="justify-between flex my-2 px-2">
+                  <Col
+                    className="px-1 font-bold text-base text-start hover:cursor-pointer"
+                    name="Description"
+                  >
+                    {item.description}
                   </Col>
-                  <Col>{item.titulo}</Col>
+                  <Col className="text-base" name="availeble">
+                    {item.available ? (
+                      <div class="text-success flex items-center ml-9">
+                        Disponivel <GrStatusGood className="ml-1" />
+                      </div>
+                    ) : (
+                      <div class="text-danger flex items-center ml-9">
+                        Indisponivel <GrStatusCritical className="ml-1" />
+                      </div>
+                    )}
+                  </Col>
+                </Row>
+                Referências
+                <Row className="w-full flex mx-1" name="references">
+                  {item.references.map((ref, idx) => (
+                    <Badge
+                      bg="light"
+                      text="dark"
+                      className={"ml-2 border w-fit "}
+                    >
+                      {ref}
+                    </Badge>
+                  ))}
+                </Row>
+                Observações
+                <Row className="w-full flex mx-1" name="obserations">
+                  {item.observation && <p className="ml-1 text-start">{item.observation}</p>}
+                  {!item.observation && <p className="ml-1 text-start">Sem observações</p>}
                 </Row>
               </Card.Body>
             </Card>
@@ -56,55 +178,3 @@ const Bandeja = () => {
 };
 
 export default Bandeja;
-
-/* props.collection.map((item, idx) => (
-          <div className="col-md-auto p-0" id={item.ID}>
-            <Card
-              className="border border-end-0 border-start-0 rounded-0"
-              style={{
-                width: "23.66rem",
-              }} /* onclick="html_Comp.modal('opcoes',${territorio.num},${
-          territorio.disponivel
-        },'${territorio.ID}')" 
-        >
-        <Card.Body>
-          <Container className="text-center">
-            <Row>
-              <div className="col-3 bg-success p-0 d-flex">
-                <img class="img-thumb m-0" src={item.mapa} />
-              </div>
-
-              <Col className="fs-6">
-                <div
-                  className="d-flex justify-content-between"
-                  style={{ width: "100%" }}
-                >
-                  <div className="text-start">{item.titulo}</div>
-                  <div className="text-end" style={{ fontSize: "16px" }}>
-                    {item.disponivel ? (
-                      <span class="text-success">Disponivel</span>
-                    ) : (
-                      <span class="text-danger">Indisponivel</span>
-                    )}
-                  </div>
-                </div>
-
-                <Row className="fs-6 text-start">
-                  {item.referencias.map((ref, idx) => (
-                    <Badge
-                      bg="light"
-                      text="dark"
-                      className={idx == 0 ? "m-1 border" : "border"}
-                    >
-                      {ref}
-                    </Badge>
-                  ))}
-                </Row>
-              </Col>
-            </Row>
-          </Container>
-        </Card.Body>
-      </Card>
-      {item.titulo}
-    </div>
-  )) */

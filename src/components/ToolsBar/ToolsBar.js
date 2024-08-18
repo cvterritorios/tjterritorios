@@ -48,8 +48,8 @@ const ToolsBar = (action) => {
 
   return (
     <>
-      <Container className="mt-3 text-center">
-        <Form className="d-flex" onSubmit={handleSearch}>
+      <Container className="my-3 text-center">
+        <Form className="flex" onSubmit={handleSearch}>
           <Form.Control
             type="search"
             placeholder="Pesquisar"
@@ -60,18 +60,16 @@ const ToolsBar = (action) => {
           />
         </Form>
 
-        <ButtonGroup aria-label="toolsbar" className="m-3">
-          <Button
-            style={{ backgroundColor: "rgb(110, 117, 122)", border: "none" }}
-            className="tools-disabled-button"
-          ></Button>
+        <ButtonGroup aria-label="toolsbar" className="my-3 h-10">
+          <Button className="border-0 bg-gray-500 hover:bg-gray-500"></Button>
+
           <Button
             variant="secondary"
             title="Adicionar Território"
+            className="border-0"
             onClick={action.create}
-            style={{ border: "none" }}
           >
-            <MdAddCircleOutline />
+            <MdAddCircleOutline size={24} />
           </Button>
 
           <DropdownButton
@@ -79,7 +77,6 @@ const ToolsBar = (action) => {
             as={ButtonGroup}
             style={{ border: "none", boxDecorationBreak: false }}
             title={<MdOutlineFilterList />}
-            id="bg-nested-dropdown"
           >
             <Dropdown.Item eventKey="1">Filtrar 1</Dropdown.Item>
             <Dropdown.Item eventKey="2">Filtrar 3</Dropdown.Item>
@@ -96,32 +93,38 @@ const ToolsBar = (action) => {
           <ButtonGroup>
             <MdFormatListBulleted
               size={38}
-              className="text-light p-2"
-              style={{ backgroundColor: "rgb(110, 117, 122)", border: "none" }}
+              className="text-light py-2 h-10 border-0 bg-gray-500 hover:bg-gray-500"
               title="Vista em lista"
+              onClick={() => {
+                setViewMode(false);
+              }}
             />
+
             <Form.Check
               type="switch"
-              className="pt-2 text-success"
+              className="py-2 border-0 bg-gray-500 hover:bg-gray-500"
               defaultChecked={viewMode}
-              style={{ backgroundColor: "rgb(110, 117, 122)", border: "none" }}
+              checked={viewMode}
               onChange={() => {
                 viewMode ? setViewMode(false) : setViewMode(true);
               }}
             />
+
             <MdGridView
               size={38}
-              className="text-light p-2"
-              style={{ backgroundColor: "rgb(110, 117, 122)", border: "none" }}
+              className="text-light py-2 h-10 border-0 bg-gray-500 hover:bg-gray-500"
               title="Vista em grade"
+              onClick={() => {
+                setViewMode(true);
+              }}
             />
-            <Button
-              style={{ backgroundColor: "rgb(110, 117, 122)", border: "none" }}
-              className="tools-disabled-button"
-            ></Button>
           </ButtonGroup>
+
+          <Button className="border-0 bg-gray-500 hover:bg-gray-500"></Button>
         </ButtonGroup>
       </Container>
+
+      <Bandeja viewGrid={viewMode} />
     </>
   );
 };

@@ -9,12 +9,7 @@ import {
   addDoc,
   updateDoc,
 } from "firebase/firestore";
-import {
-  ref,
-  uploadBytes,
-  getDownloadURL,
-  uploadBytesResumable,
-} from "firebase/storage";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // hooks
 import { useState, useEffect } from "react";
@@ -92,14 +87,17 @@ export const useFirestore = () => {
       // Get the download URL
       getDownloadURL(mapRef).then(async (url) => {
         // Update do territorio com o novo map
-        const newTerritorio = { map: url };
-        const resUpdate = await updateDoc(
-          doc(db, collect, res.id),
-          newTerritorio
-        );
+        const newTerritorio = { id: res.id, map: url };
+
+        await updateDoc(doc(db, collect, res.id), newTerritorio);
+
+        // refresh page
+        setTimeout(() => {
+          window.location.reload();
+        }, 2000);
 
         validate("end");
-        return resUpdate;
+        return res;
       });
     });
   };
