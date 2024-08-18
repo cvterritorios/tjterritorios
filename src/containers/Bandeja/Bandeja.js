@@ -3,10 +3,20 @@ import { Container, Card, Row, Col, Badge, Button } from "react-bootstrap";
 import { useFirestore } from "../../hooks/useFirestore";
 import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
 import { HiOutlineDotsVertical } from "react-icons/hi";
+import { or } from "firebase/firestore";
 
-const Bandeja = ({ viewGrid, filter = [], searching, setTag }) => {
+const Bandeja = ({
+  viewGrid,
+  filter = [],
+  searching,
+  setTag,
+  isOrdered = false,
+  orderDir,
+}) => {
   const [collection, setCollection] = useState([]);
   const [searchTag, setSearchTag] = useState(false);
+
+  const [myOrderBy, setMyOrderBy] = useState({});
 
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,13 +31,22 @@ const Bandeja = ({ viewGrid, filter = [], searching, setTag }) => {
   const startBandeja = async () => {
     setLoading(true);
 
+    if (isOrdered) {
+      setMyOrderBy({ attr: isOrdered, dir: orderDir });
+    }
+
     if (searching) {
       if (searchTag) {
-        const collsT = await getCollectionWhere("territorios", {
-          attr: "references",
-          comp: "array-contains",
-          value: searching,
-        });
+        const collsT = await getCollectionWhere(
+          "territorios",
+          {
+            attr: "references",
+            comp: "array-contains",
+            value: searching,
+          },
+          isOrdered && myOrderBy
+        );
+
         setCollection(collsT);
 
         console.log(collsT);
@@ -35,11 +54,15 @@ const Bandeja = ({ viewGrid, filter = [], searching, setTag }) => {
         setSearchTag(false);
         return;
       } else {
-        const coll = await getCollectionWhere("territorios", {
-          attr: "description",
-          comp: "==",
-          value: searching,
-        });
+        const coll = await getCollectionWhere(
+          "territorios",
+          {
+            attr: "description",
+            comp: "==",
+            value: searching,
+          },
+          isOrdered && myOrderBy
+        );
         setCollection(coll);
         setLoading(false);
         return;
@@ -47,21 +70,29 @@ const Bandeja = ({ viewGrid, filter = [], searching, setTag }) => {
     }
 
     if (filter[0]) {
-      const coll = await getCollectionWhere("territorios", {
-        attr: "available",
-        comp: "==",
-        value: true,
-      });
+      const coll = await getCollectionWhere(
+        "territorios",
+        {
+          attr: "available",
+          comp: "==",
+          value: true,
+        },
+        isOrdered ? myOrderBy : false
+      );
       setCollection(coll);
     } else if (filter[1]) {
-      const coll = await getCollectionWhere("territorios", {
-        attr: "available",
-        comp: "==",
-        value: false,
-      });
+      const coll = await getCollectionWhere(
+        "territorios",
+        {
+          attr: "available",
+          comp: "==",
+          value: false,
+        },
+        isOrdered && myOrderBy
+      );
       setCollection(coll);
     } else {
-      const coll = await getCollection("territorios");
+      const coll = await getCollection("territorios", isOrdered && myOrderBy);
       setCollection(coll);
     }
     setLoading(false);
@@ -74,10 +105,6 @@ const Bandeja = ({ viewGrid, filter = [], searching, setTag }) => {
 
   if (loading) {
     <p>carregando..</p>;
-  }
-
-  if (collection.length < 1) {
-    <p>Nenhum territorio encontrados</p>;
   }
 
   if (!viewGrid) {

@@ -8,6 +8,8 @@ import {
   getDoc,
   addDoc,
   updateDoc,
+  orderBy,
+  Timestamp
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -87,7 +89,7 @@ export const useFirestore = () => {
       // Get the download URL
       getDownloadURL(mapRef).then(async (url) => {
         // Update do territorio com o novo map
-        const newTerritorio = { id: res.id, map: url };
+        const newTerritorio = { id: res.id, map: url, createdAt: Timestamp.now(), requests: 0 };
 
         await updateDoc(doc(db, collect, res.id), newTerritorio);
 
@@ -189,11 +191,14 @@ export const useFirestore = () => {
     }
   };
 
-  const getCollection = async (collect) => {
+  const getCollection = async (collect, ord = { attr: "", dir: "" }) => {
     validate("start");
 
     try {
-      const q = query(collection(db, collect));
+      const q = query(
+        collection(db, collect),
+        ord.attr && orderBy(ord.attr, ord.dir)
+      );
 
       const res = await getDocsQuery(q);
 
@@ -219,7 +224,8 @@ export const useFirestore = () => {
 
   const getCollectionWhere = async (
     collect,
-    whr = { attr: "", comp: "", value: "" }
+    whr = { attr: "", comp: "", value: "" },
+    ord = { attr: "", dir: "" }
   ) => {
     //where {attr, comp, value}
     validate("start");
@@ -227,7 +233,7 @@ export const useFirestore = () => {
     try {
       const q = query(
         collection(db, collect),
-        where(whr.attr, whr.comp, whr.value)
+        where(whr.attr, whr.comp, whr.value),
       );
 
       const res = await getDocsQuery(q);
