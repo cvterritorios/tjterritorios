@@ -9,22 +9,26 @@ import {
   InputGroup,
 } from "react-bootstrap";
 import { MdAddCircleOutline } from "react-icons/md";
+import { useFirestore } from "../../hooks/useFirestore";
 
 const MyModal = (modal) => {
   //
 
   // data Novo Territorio
   const [image, setImage] = useState(null);
-  const [linkImg, setLinkImg] = useState("");
+  const [myFile, setMyFile] = useState("");
   const [description, setDescription] = useState("");
   const [referencias, setReferencias] = useState([]);
   const [observation, setObservation] = useState("");
+
+  const { setTerritories } = useFirestore();
 
   useEffect(() => {}, [referencias, image]);
 
   const handleReference = () => {
     const text = document.getElementById("ref-input").value;
 
+    // verifica se a caixa de texto está vazia
     if (text === "") {
       console.log("Escreva uma referência");
       return;
@@ -32,16 +36,21 @@ const MyModal = (modal) => {
 
     let myArray = [];
 
+    // verifica se já existe referencia, se sim adiciona-as ao novo array
     if (referencias.length > 0) {
       myArray.push(...referencias);
     }
 
+    // verifica se a nova referencia já existe, se sim sai
     if (referencias.includes(text)) return;
 
+    // adiciona a nova referencia ao array
     myArray.push(text);
 
+    // seta o novo array em referencias
     setReferencias(myArray);
 
+    // limpa o input
     document.getElementById("ref-input").value = "";
 
     // console.log(referencias.includes(text));
@@ -55,45 +64,50 @@ const MyModal = (modal) => {
         const readerTarget = e.target;
 
         setImage(<Card.Img src={readerTarget.result} />);
-        setLinkImg(readerTarget.result);
+        setMyFile(file);
       });
 
       reader.readAsDataURL(file);
     }
   };
 
-  // handleSubmit Novo Territorio
-  const handleSubmit = () => {
-    const territories = {
-      description: description, // to validate
-      available: true,
-      map: linkImg, // to validate
-      observation: observation,
-      references: referencias, // to validate
+  const insertCreateContent = () => {
+    // handleSubmit Novo Territorio
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+      console.log(myFile)
+
+      const territories = {
+        description: description, // to validate
+        available: true,
+        observation: observation,
+        references: referencias, // to validate
+      };
+
+      // if no description, map, or references, return
+      if (!description || !myFile || !referencias) {
+        console.log("Preencha todos os campos obrigatórios");
+        return;
+      }
+
+      // add territories to firestore, if true, add image to storage
+      console.log(territories);
+      const response = await setTerritories(territories,myFile);
+      /* // refresh page
+      if (response) window.location.reload();
+      else {
+        // clear all states
+        setImage(null);
+        setLinkImg("");
+        setDescription("");
+        setReferencias([]);
+        setObservation("");
+      } */
     };
 
-    // if no description, map, or references, return
-    if (!description || !linkImg || !referencias) {
-      console.log("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    // add territories to firestore, if true, add image to storage
-
-    // clear all states
-    setImage(null);
-    setLinkImg("");
-    setDescription("");
-    setReferencias([]);
-    setObservation("");
-
-    // refresh page
-  };
-
-  const insertCreateContent = () => {
     return (
       <>
-        <Form onSubmit={(e) => e.preventDefault()}>
+        <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <div className="m-0">
               {/* <Form.Label htmlFor="mapaInput">Imagem Mapa</Form.Label> */}
@@ -114,7 +128,11 @@ const MyModal = (modal) => {
                 }}
               />
 
-              <Form.Control type="text" placeholder="Descrição" />
+              <Form.Control
+                type="text"
+                placeholder="Descrição"
+                onChange={(e) => setDescription(e.target.value)}
+              />
 
               <div className="p-3 pt-1 pb-1">
                 {referencias &&
@@ -143,6 +161,7 @@ const MyModal = (modal) => {
               <Form.Control
                 as="textarea"
                 placeholder="Escreva uma observação"
+                onChange={(e) => setObservation(e.target.value)}
               ></Form.Control>
             </div>
           </Modal.Body>

@@ -1,4 +1,4 @@
-import { db } from "../services/firebase";
+import { db, storage } from "../services/firebase";
 import {
   collection,
   query,
@@ -9,6 +9,12 @@ import {
   addDoc,
   updateDoc,
 } from "firebase/firestore";
+import {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  uploadBytesResumable,
+} from "firebase/storage";
 
 // hooks
 import { useState, useEffect } from "react";
@@ -72,6 +78,30 @@ export const useFirestore = () => {
       setError(systemErrorMessage);
     }
     validate("end");
+  };
+
+  const setTerritories = async (data = {}, file) => {
+    const collect = "territorios";
+    validate("start");
+
+    const res = await addDoc(collection(db, collect), data);
+
+    // upload do map em data para o storage
+    const mapRef = ref(storage, `territorios/${res.id}/mapa.png`);
+    await uploadBytes(mapRef, file).then((snapshot) => {
+      // Get the download URL
+      getDownloadURL(mapRef).then(async (url) => {
+        // Update do territorio com o novo map
+        const newTerritorio = { map: url };
+        const resUpdate = await updateDoc(
+          doc(db, collect, res.id),
+          newTerritorio
+        );
+
+        validate("end");
+        return resUpdate;
+      });
+    });
   };
 
   // functions - update
@@ -236,6 +266,7 @@ export const useFirestore = () => {
     loading,
     //sets
     setDocument,
+    setTerritories,
     //functions - updates
     updateDocument,
     //functions - gets
