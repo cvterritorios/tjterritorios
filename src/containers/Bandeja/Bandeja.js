@@ -4,8 +4,9 @@ import { useFirestore } from "../../hooks/useFirestore";
 import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 
-const Bandeja = ({ viewGrid, filter = [], searching }) => {
+const Bandeja = ({ viewGrid, filter = [], searching, setTag }) => {
   const [collection, setCollection] = useState([]);
+  const [searchTag, setSearchTag] = useState(false);
 
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -21,14 +22,28 @@ const Bandeja = ({ viewGrid, filter = [], searching }) => {
     setLoading(true);
 
     if (searching) {
-      const coll = await getCollectionWhere("territorios", {
-        attr: "description",
-        comp: "==",
-        value: searching,
-      });
-      setCollection(coll);
-      setLoading(false);
-      return;
+      if (searchTag) {
+        const collsT = await getCollectionWhere("territorios", {
+          attr: "references",
+          comp: "array-contains",
+          value: searching,
+        });
+        setCollection(collsT);
+
+        console.log(collsT);
+        setLoading(false);
+        setSearchTag(false);
+        return;
+      } else {
+        const coll = await getCollectionWhere("territorios", {
+          attr: "description",
+          comp: "==",
+          value: searching,
+        });
+        setCollection(coll);
+        setLoading(false);
+        return;
+      }
     }
 
     if (filter[0]) {
@@ -61,8 +76,8 @@ const Bandeja = ({ viewGrid, filter = [], searching }) => {
     <p>carregando..</p>;
   }
 
-  if(collection.length < 1){
-    <p>Nenhum territorio encontrados</p>
+  if (collection.length < 1) {
+    <p>Nenhum territorio encontrados</p>;
   }
 
   if (!viewGrid) {
@@ -119,7 +134,14 @@ const Bandeja = ({ viewGrid, filter = [], searching }) => {
                           <Badge
                             bg="light"
                             text="dark"
-                            className={"ml-2 border w-fit "}
+                            className={
+                              "ml-2 border w-fit hover:cursor-pointer "
+                            }
+                            title={ref}
+                            onClick={() => {
+                              setTag(ref);
+                              setSearchTag(true);
+                            }}
                           >
                             {ref}
                           </Badge>

@@ -32,6 +32,7 @@ const ToolsBar = (action) => {
           type="search"
           placeholder="Pesquisar"
           aria-label="Pesquisar"
+          value={searchTxt}
           onChange={(e) => {
             setSearchTxt(e.target.value);
           }}
@@ -127,7 +128,12 @@ const ToolsBar = (action) => {
         </ButtonGroup>
       </Container>
 
-      <Bandeja viewGrid={viewMode} filter={[isFilterAv, isFilterUn]} searching={searchTxt} />
+      <Bandeja
+        viewGrid={viewMode}
+        filter={[isFilterAv, isFilterUn]}
+        searching={searchTxt}
+        setTag={setSearchTxt}
+      />
     </>
   );
 };
