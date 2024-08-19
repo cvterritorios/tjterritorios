@@ -150,7 +150,7 @@ const Bandeja = ({
           centered
         >
           <DetailsModal
-            title={"Editar Território"}
+            title={"Detalhes do Território"}
             territory={territoryNowData}
           />
         </Modal>

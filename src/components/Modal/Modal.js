@@ -4,12 +4,16 @@ import {
   Button,
   Card,
   Form,
+  Col,
+  Badge,
+  Row,
   InputGroup,
   ButtonGroup,
 } from "react-bootstrap";
 import { MdAddCircleOutline } from "react-icons/md";
 import { useFirestore } from "../../hooks/useFirestore";
 import { ImCross } from "react-icons/im";
+import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
 
 const TerritoryModal = ({ title, type, territory = {} }) => {
   const [image, setImage] = useState(
@@ -94,7 +98,7 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
         return;
       }
 
-      if(!territory.id && !myFile){
+      if (!territory.id && !myFile) {
         console.log("Preencha todos os campos obrigatórios");
         return;
       }
@@ -102,10 +106,14 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
       // add territories to firestore, if true, add image to storage
 
       if (territory.id) {
-        alert("Go update")
-        await updateTerritories(territory.id, territories, myFile? myFile : null );
+        alert("Go update");
+        await updateTerritories(
+          territory.id,
+          territories,
+          myFile ? myFile : null
+        );
       } else {
-        alert("go create")
+        alert("go create");
         //await setTerritories(territories, myFile);
       }
     };
@@ -127,7 +135,6 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
                 type="file"
                 accept=".jpg,.png,.jpeg"
                 className="d-none"
-                
                 id="mapaInput"
                 onChange={(e) => {
                   handlePreview(e.target.files[0]);
@@ -271,15 +278,89 @@ const MenuOpcoesModal = ({
   );
 };
 
-const DetailsModal = ({title}) => {
-  return(
+const DetailsModal = ({ title, territory }) => {
+  const {
+    description,
+    available,
+    references,
+    observation,
+    map,
+    requests,
+    createdAt,
+    updatedAt,
+  } = territory;
+  return (
     <>
       <Modal.Header closeButton>
         <Modal.Title>{title}</Modal.Title>
       </Modal.Header>
 
-    </>
-  )
-}
+      <Modal.Body className="flex">
+        <Col xs={6}>
+          <Row name="image">
+            <Card.Img
+              className="h-full w-full hover:cursor-pointer"
+              variant="top"
+              src={map}
+            ></Card.Img>
+          </Row>
+          <Row>
+            <Col name="Descrição">{description}</Col>
+            <Col name="Disponibilidade">
+              {available ? (
+                <div class="text-success flex items-center ml-9">
+                  Disponivel <GrStatusGood className="ml-1" />
+                </div>
+              ) : (
+                <div class="text-danger flex items-center ml-9">
+                  Indisponivel <GrStatusCritical className="ml-1" />
+                </div>
+              )}
+            </Col>
+          </Row>
+          <Row name="Referencias">
+            {references.map((ref, idx) => (
+              <Badge
+                bg="light"
+                text="dark"
+                key={idx}
+                className={"ml-2 border w-fit "}
+              >
+                {ref}
+              </Badge>
+            ))}
+          </Row>
+        </Col>
 
-export { TerritoryModal, MenuOpcoesModal, DetailsModal};
+        <Col xs={6} className="text-end">
+          <Row name="Observação">{observation}</Row>
+          <Row name="Pedidos">
+            <Col>
+              <h5>Pedidos Mês</h5>
+              {requests}
+            </Col>
+            <Col>
+              <h5>Pedidos Total</h5>
+              {requests + 10}
+            </Col>
+          </Row>
+          <Row name="Datas">
+            {/* {createdAt} */}
+           {/*  {updatedAt ? updatedAt : ""} */}
+          </Row>
+          <Row name="Info de atribuição">
+            {!available && (
+              <>
+                <Row>Nome do Publicador</Row>
+                <Row>Data de atribuição</Row>
+                <Row>Atribuido por:</Row>
+              </>
+            )}
+          </Row>
+        </Col>
+      </Modal.Body>
+    </>
+  );
+};
+
+export { TerritoryModal, MenuOpcoesModal, DetailsModal };
