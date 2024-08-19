@@ -1,35 +1,35 @@
 import ToolsBar from "../../components/ToolsBar/ToolsBar";
 import { Modal } from "react-bootstrap";
-import { MyModal } from "../../components/Modal/Modal";
+import { TerritoryModal } from "../../components/Modal/Modal";
 import { useState } from "react";
-import Bandeja from "../../containers/Bandeja/Bandeja";
 
 const Home = () => {
-  const [show, setShow] = useState(false);
+  const [showTerritoryModal_New, setShowTerritoryModal_New] = useState(false);
 
-  const handleClose = () => setShow(false);
-  const handleShow = () => setShow(true);
 
   return (
     <>
-      <ToolsBar create={handleShow} />
+      <ToolsBar
+        create={() => setShowTerritoryModal_New(true)}
+      />
 
       {""}
 
       <Modal
         size="sm"
-        show={show}
-        onHide={handleClose}
+        show={showTerritoryModal_New}
+        onHide={() => setShowTerritoryModal_New(false)}
         backdrop="static"
         keyboard={false}
         centered
       >
-        <MyModal
+        <TerritoryModal
           title={"Novo Território"}
           type={"create"}
-          closeButton={handleClose}
         />
       </Modal>
+
+      
     </>
   );
 };

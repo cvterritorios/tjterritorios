@@ -3,25 +3,30 @@ import {
   Modal,
   Button,
   Card,
-  Row,
-  Col,
   Form,
   InputGroup,
+  ButtonGroup,
 } from "react-bootstrap";
 import { MdAddCircleOutline } from "react-icons/md";
 import { useFirestore } from "../../hooks/useFirestore";
+import { ImCross } from "react-icons/im";
 
-const MyModal = (modal) => {
-  //
-
-  // data Novo Territorio
-  const [image, setImage] = useState(null);
+const TerritoryModal = ({ title, type, territory = {} }) => {
+  const [image, setImage] = useState(
+    territory.id ? <Card.Img src={territory.map} /> : null
+  );
   const [myFile, setMyFile] = useState("");
-  const [description, setDescription] = useState("");
-  const [referencias, setReferencias] = useState([]);
-  const [observation, setObservation] = useState("");
+  const [description, setDescription] = useState(
+    territory.id ? territory.description : ""
+  );
+  const [referencias, setReferencias] = useState(
+    territory.id ? territory.references : []
+  );
+  const [observation, setObservation] = useState(
+    territory.id ? territory.observation : ""
+  );
 
-  const { setTerritories } = useFirestore();
+  const { setTerritories, updateTerritories } = useFirestore();
 
   useEffect(() => {}, [referencias, image]);
 
@@ -71,29 +76,38 @@ const MyModal = (modal) => {
     }
   };
 
-  const insertCreateContent = () => {
+  const insertContent = (territory = {}) => {
     // handleSubmit Novo Territorio
     const handleSubmit = async (e) => {
       e.preventDefault();
-      console.log(myFile);
 
       const territories = {
         description: description, // to validate
-        available: true,
+        available: territory.id ? territory.available : true,
         observation: observation,
         references: referencias, // to validate
       };
 
       // if no description, map, or references, return
-      if (!description || !myFile || !referencias) {
+      if (!description || !referencias) {
+        console.log("Preencha todos os campos obrigatórios");
+        return;
+      }
+
+      if(!territory.id && !myFile){
         console.log("Preencha todos os campos obrigatórios");
         return;
       }
 
       // add territories to firestore, if true, add image to storage
-      console.log(territories);
-      await setTerritories(territories, myFile);
-      
+
+      if (territory.id) {
+        alert("Go update")
+        await updateTerritories(territory.id, territories, myFile? myFile : null );
+      } else {
+        alert("go create")
+        //await setTerritories(territories, myFile);
+      }
     };
 
     return (
@@ -113,6 +127,7 @@ const MyModal = (modal) => {
                 type="file"
                 accept=".jpg,.png,.jpeg"
                 className="d-none"
+                
                 id="mapaInput"
                 onChange={(e) => {
                   handlePreview(e.target.files[0]);
@@ -122,15 +137,31 @@ const MyModal = (modal) => {
               <Form.Control
                 type="text"
                 placeholder="Descrição"
+                value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
 
               <div className="p-3 pt-1 pb-1">
                 {referencias &&
                   referencias.map((referencia, idx) => (
-                    <Row key={idx} className="bg-light p-1 rounded mb-1">
+                    <div
+                      key={idx}
+                      className="bg-gray-200 p-1 flex items-center justify-between  rounded mb-1"
+                    >
                       {referencia}
-                    </Row>
+                      <Button
+                        size="sm"
+                        variant="outline-danger"
+                        className=""
+                        onClick={() => {
+                          const myArray = [...referencias];
+                          myArray.splice(idx, 1);
+                          setReferencias(myArray);
+                        }}
+                      >
+                        <ImCross size={10} />
+                      </Button>
+                    </div>
                   ))}
               </div>
 
@@ -152,6 +183,7 @@ const MyModal = (modal) => {
               <Form.Control
                 as="textarea"
                 placeholder="Escreva uma observação"
+                value={observation}
                 onChange={(e) => setObservation(e.target.value)}
               ></Form.Control>
             </div>
@@ -170,12 +202,84 @@ const MyModal = (modal) => {
   return (
     <>
       <Modal.Header closeButton>
-        <Modal.Title>{modal.title}</Modal.Title>
+        <Modal.Title>{title}</Modal.Title>
       </Modal.Header>
 
-      {modal.type == "create" && insertCreateContent()}
+      {type === "create" && insertContent()}
+      {type === "update" && insertContent(territory)}
     </>
   );
 };
 
-export { MyModal };
+const MenuOpcoesModal = ({
+  id,
+  description,
+  available = false,
+  closeSelf,
+  show_Read,
+  show_Update,
+  show_Delete,
+}) => {
+  return (
+    <>
+      <ButtonGroup vertical className="divide-y divide-gray-300 w-full ">
+        <Button variant="light" className="text-lg font-semibold py-2" disabled>
+          {description}
+        </Button>
+
+        <Button
+          variant="light"
+          className="text-lg font-medium py-2"
+          onclick="se disponivel atribuir, se não desatribuir"
+        >
+          {available ? (
+            <span className="text-success">Atribuir</span>
+          ) : (
+            <span className="text-danger">Desatribuir</span>
+          )}
+        </Button>
+
+        <Button
+          variant="light"
+          className="text-lg font-medium py-2"
+          onClick={() => {
+            show_Read();
+          }}
+        >
+          Detalhes
+        </Button>
+
+        <Button
+          variant="light"
+          className="text-lg font-medium py-2"
+          onClick={() => {
+            show_Update();
+          }}
+        >
+          Editar
+        </Button>
+
+        <Button
+          variant="light"
+          className="text-lg font-medium py-2"
+          onclick="Abrir moda de delete"
+        >
+          Eliminar
+        </Button>
+      </ButtonGroup>
+    </>
+  );
+};
+
+const DetailsModal = ({title}) => {
+  return(
+    <>
+      <Modal.Header closeButton>
+        <Modal.Title>{title}</Modal.Title>
+      </Modal.Header>
+
+    </>
+  )
+}
+
+export { TerritoryModal, MenuOpcoesModal, DetailsModal};

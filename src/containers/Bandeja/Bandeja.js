@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
-import { Container, Card, Row, Col, Badge, Button } from "react-bootstrap";
+import { Container, Card, Row, Col, Badge, Modal } from "react-bootstrap";
 import { useFirestore } from "../../hooks/useFirestore";
 import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
-import { HiOutlineDotsVertical } from "react-icons/hi";
-import { or } from "firebase/firestore";
+import {
+  DetailsModal,
+  MenuOpcoesModal,
+  TerritoryModal,
+} from "../../components/Modal/Modal";
 
 const Bandeja = ({
   viewGrid,
@@ -17,6 +20,15 @@ const Bandeja = ({
   const [searchTag, setSearchTag] = useState(false);
 
   const [myOrderBy, setMyOrderBy] = useState({});
+
+  const [territoryNowData, setTerritoryNowData] = useState({});
+
+  const [showTerritoryModal_Update, setShowTerritoryModal_Update] =
+    useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showOpcoesModal, setShowOpcoesModal] = useState(false);
+  const handleShowOpcoesModal = () => setShowOpcoesModal(true);
+  const handleCloseOpcoesModal = () => setShowOpcoesModal(false);
 
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -107,6 +119,61 @@ const Bandeja = ({
     <p>carregando..</p>;
   }
 
+  const myModals = () => {
+    return (
+      <>
+        {/* Menu de Opocoes */}
+        <Modal
+          size="sm"
+          show={showOpcoesModal}
+          onHide={() => handleCloseOpcoesModal()}
+          centered
+        >
+          <MenuOpcoesModal
+            id={territoryNowData.id}
+            description={territoryNowData.description}
+            available={territoryNowData.available}
+            closeSelf={() => handleCloseOpcoesModal()}
+            /* show Modals opcoes */
+            show_Update={() => setShowTerritoryModal_Update(true)}
+            show_Read={() => setShowDetailsModal(true)}
+          />
+        </Modal>
+
+        {/* Opcao Read - Detalhes */}
+        <Modal
+          size="lg"
+          show={showDetailsModal}
+          onHide={() => setShowDetailsModal(false)}
+          backdrop="static"
+          keyboard={false}
+          centered
+        >
+          <DetailsModal
+            title={"Editar Território"}
+            territory={territoryNowData}
+          />
+        </Modal>
+
+        {/* Opcao Update - Editar */}
+        <Modal
+          size="sm"
+          show={showTerritoryModal_Update}
+          onHide={() => setShowTerritoryModal_Update(false)}
+          backdrop="static"
+          keyboard={false}
+          centered
+        >
+          <TerritoryModal
+            title={"Editar Território"}
+            type={"update"}
+            territory={territoryNowData}
+          />
+        </Modal>
+      </>
+    );
+  };
+
   if (!viewGrid) {
     return (
       <>
@@ -119,6 +186,12 @@ const Bandeja = ({
                     <Col xs={3} className="p-0 h-full">
                       <Card.Img
                         className="h-16 w-full hover:cursor-pointer"
+                        onClick={() => {
+                          setTerritoryNowData({
+                            ...item,
+                          });
+                          handleShowOpcoesModal();
+                        }}
                         variant="top"
                         src={item.map}
                       ></Card.Img>
@@ -126,14 +199,13 @@ const Bandeja = ({
                     <Col className="px-1">
                       <Row className="justify-between flex">
                         <Col
-                          xs={5}
                           className="font-bold text-base text-start ml-2 hover:cursor-pointer"
                           name="Description"
                         >
                           {item.description}
                         </Col>
                         <Col className="" name="availeble">
-                          <div className="text-start text-base">
+                          <div className="text-end text-base">
                             {item.available ? (
                               <span class="text-success flex items-center">
                                 Disponivel <GrStatusGood className="ml-1" />
@@ -145,15 +217,6 @@ const Bandeja = ({
                               </span>
                             )}
                           </div>
-                        </Col>
-                        <Col xs={1} className="p-0 h-full" name="dotmenu">
-                          <Button
-                            variant="outline-light"
-                            className="border-0"
-                            size="sm"
-                          >
-                            <HiOutlineDotsVertical size={20} color="black" />
-                          </Button>
                         </Col>
                       </Row>
                       <Row className="w-full flex m-2" name="references">
@@ -181,6 +244,7 @@ const Bandeja = ({
             </div>
           ))}
         </Container>
+        {showOpcoesModal && myModals()}
       </>
     );
   }
@@ -244,6 +308,7 @@ const Bandeja = ({
           </div>
         ))}
       </Container>
+      {() => myModals()}
     </>
   );
 };

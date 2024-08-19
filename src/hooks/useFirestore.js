@@ -9,7 +9,7 @@ import {
   addDoc,
   updateDoc,
   orderBy,
-  Timestamp
+  Timestamp,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
@@ -89,7 +89,12 @@ export const useFirestore = () => {
       // Get the download URL
       getDownloadURL(mapRef).then(async (url) => {
         // Update do territorio com o novo map
-        const newTerritorio = { id: res.id, map: url, createdAt: Timestamp.now(), requests: 0 };
+        const newTerritorio = {
+          id: res.id,
+          map: url,
+          createdAt: Timestamp.now(),
+          requests: 0,
+        };
 
         await updateDoc(doc(db, collect, res.id), newTerritorio);
 
@@ -105,23 +110,58 @@ export const useFirestore = () => {
   };
 
   // functions - update
-  const updateDocument = async (collect, docu, data) => {
+  const updateDocument = async (collect = "", documentId = "", data = {}) => {
     validate("start");
     let systemErrorMessage;
 
-    try {
-      const res = await updateDoc(doc(db, collect, docu), data);
-      validate("end");
-      return res;
-    } catch (error) {
-      console.log(error.messeger);
-      console.log(typeof error.messeger);
-
-      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
-
-      setError(systemErrorMessage);
-    }
+    const res = await updateDoc(doc(db, collect, documentId), data);
     validate("end");
+
+    validate("end");
+    return res;
+  };
+
+  const updateTerritories = async (documentId = "", data = {}, file = null) => {
+    validate("start");
+    const collect = "territorios";
+
+    if (file) {
+      // upload do map em data para o storage
+      const mapRef = ref(storage, `territorios/${documentId}/mapa.png`);
+      await uploadBytes(mapRef, file).then((snapshot) => {
+        // Get the download URL
+        getDownloadURL(mapRef).then(async (url) => {
+          // Update do territorio com o novo map
+          const newTerritorio = {
+            ...data,
+            map: url,
+            updatedAt: Timestamp.now(),
+          };
+
+          await updateDoc(doc(db, collect, documentId), newTerritorio);
+
+          // refresh page
+          setTimeout(() => {
+            validate("end");
+            window.location.reload();
+          }, 100);
+          return;
+        });
+      });
+    }
+
+    const newTerritorio = {
+      ...data,
+      updatedAt: Timestamp.now(),
+    };
+
+    await updateDoc(doc(db, collect, documentId), newTerritorio);
+
+    // refresh page
+    setTimeout(() => {
+      validate("end");
+      window.location.reload();
+    }, 100);
   };
 
   // functions - gets
@@ -233,7 +273,7 @@ export const useFirestore = () => {
     try {
       const q = query(
         collection(db, collect),
-        where(whr.attr, whr.comp, whr.value),
+        where(whr.attr, whr.comp, whr.value)
       );
 
       const res = await getDocsQuery(q);
@@ -273,6 +313,7 @@ export const useFirestore = () => {
     setTerritories,
     //functions - updates
     updateDocument,
+    updateTerritories,
     //functions - gets
     getDocId,
     getDocWhere,

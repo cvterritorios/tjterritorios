@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Form,
   Button,
@@ -15,10 +15,9 @@ import {
 import { FaArrowDownShortWide, FaArrowDownWideShort } from "react-icons/fa6";
 
 // hooks
-import { useFirestore } from "../../hooks/useFirestore";
 import Bandeja from "../../containers/Bandeja/Bandeja";
 
-const ToolsBar = (action) => {
+const ToolsBar = ({create}) => {
   const [searchTxt, setSearchTxt] = useState("");
   const [viewMode, setViewMode] = useState(false);
   const [isFilterUn, setIsFilterAn] = useState(false);
@@ -52,7 +51,7 @@ const ToolsBar = (action) => {
             variant="light"
             title="Adicionar Território"
             className="border-0"
-            onClick={action.create}
+            onClick={create}
           >
             <MdAddCircleOutline size={24} />
           </Button>
