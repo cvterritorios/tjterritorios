@@ -32,7 +32,6 @@ const NavBar = () => {
   const { user } = useAuthValue();
   const { logout, loading: authLoading } = useAuthentication();
   const { getDocWhere, getCollection, loading: dataLoading } = useFirestore();
-  const { isAdmin: isADM } = useSessionStorage();
 
   const onDoubleClickHandler = () => {
     setShowMenu(true);
@@ -66,7 +65,6 @@ const NavBar = () => {
       list.forEach((adm) => {
         if (adm == user?.displayName) {
           setIsAdmin(true);
-          console.log(adm);
         }
       });
     }
@@ -120,21 +118,15 @@ const NavBar = () => {
             )
           }
           <div className="d-flex align-items-center menu-items">
-            {user ? (
-              isAdmin ? (
-                <>
-                  <NavLink to="/register" className="navlink">
-                    Registar
-                  </NavLink>
-                  <NavLink to="/congregacoes" className="navlink">
-                    Congregações
-                  </NavLink>
-                </>
-              ) : (
-                ""
-              )
-            ) : (
-              ""
+            {isAdmin && (
+              <>
+                <NavLink to="/register" className="navlink">
+                  Registar
+                </NavLink>
+                <NavLink to="/congregacoes" className="navlink">
+                  Congregações
+                </NavLink>
+              </>
             )}
             {user && (
               <a>
@@ -190,7 +182,7 @@ const NavBar = () => {
                       userNow?.responsible.map((element, idx) =>
                         element.isLoged ? (
                           <Col xs={7} md={5} key={idx}>
-                            <strong>Perfil:</strong>
+                            <strong>Responsavel:</strong>
                             <span> {element.name}</span>
                           </Col>
                         ) : (

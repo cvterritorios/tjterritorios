@@ -2,11 +2,14 @@ import { useEffect, useState } from "react";
 import { Container, Card, Row, Col, Badge, Modal } from "react-bootstrap";
 import { useFirestore } from "../../hooks/useFirestore";
 import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
+
 import {
   DetailsModal,
   MenuOpcoesModal,
   TerritoryModal,
+  ViewImageModal,
 } from "../../components/Modal/Modal";
+import { AvailableStatus, CardsGrid, CardsList, RefTags } from "./shared";
 
 const Bandeja = ({
   viewGrid,
@@ -17,16 +20,16 @@ const Bandeja = ({
   orderDir,
 }) => {
   const [collection, setCollection] = useState([]);
-  const [searchTag, setSearchTag] = useState(false);
-
-  const [myOrderBy, setMyOrderBy] = useState({});
-
   const [territoryNowData, setTerritoryNowData] = useState({});
 
-  const [showTerritoryModal_Update, setShowTerritoryModal_Update] =
-    useState(false);
+  const [searchTag, setSearchTag] = useState(false);
+  const [myOrderBy, setMyOrderBy] = useState({});
+
+  const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showOpcoesModal, setShowOpcoesModal] = useState(false);
+  const [showViewImageModal, setShowViewImageModal] = useState(false);
+
   const handleShowOpcoesModal = () => setShowOpcoesModal(true);
   const handleCloseOpcoesModal = () => setShowOpcoesModal(false);
 
@@ -61,9 +64,8 @@ const Bandeja = ({
 
         setCollection(collsT);
 
-        console.log(collsT);
         setLoading(false);
-        setSearchTag(false);
+        // setSearchTag(false);
         return;
       } else {
         const coll = await getCollectionWhere(
@@ -113,7 +115,7 @@ const Bandeja = ({
   useEffect(() => {
     startBandeja();
     if (error) setError(error);
-  }, [error, filter, searching]);
+  }, [error, filter, searching, viewGrid, isOrdered, orderDir]);
 
   if (loading) {
     <p>carregando..</p>;
@@ -135,7 +137,7 @@ const Bandeja = ({
             available={territoryNowData.available}
             closeSelf={() => handleCloseOpcoesModal()}
             /* show Modals opcoes */
-            show_Update={() => setShowTerritoryModal_Update(true)}
+            show_Update={() => setShowUpdateModal(true)}
             show_Read={() => setShowDetailsModal(true)}
           />
         </Modal>
@@ -152,14 +154,26 @@ const Bandeja = ({
           <DetailsModal
             title={"Detalhes do Território"}
             territory={territoryNowData}
+            viewImage={() => setShowViewImageModal(true)}
           />
+        </Modal>
+
+        {/* View Image */}
+        <Modal
+          className="index-34"
+          size="xl"
+          show={showViewImageModal}
+          onHide={() => setShowViewImageModal(false)}
+          centered
+        >
+          <ViewImageModal image={territoryNowData.map} />
         </Modal>
 
         {/* Opcao Update - Editar */}
         <Modal
           size="sm"
-          show={showTerritoryModal_Update}
-          onHide={() => setShowTerritoryModal_Update(false)}
+          show={showUpdateModal}
+          onHide={() => setShowUpdateModal(false)}
           backdrop="static"
           keyboard={false}
           centered
@@ -174,141 +188,33 @@ const Bandeja = ({
     );
   };
 
-  if (!viewGrid) {
-    return (
-      <>
-        <Container className="flex flex-wrap lg:justify-between justify-center ">
-          {collection.map((item, idx) => (
-            <div id={item.id} key={idx} className="m-1">
-              <Card className="border border-end-0 border-start-0 rounded-0 w-[25rem] h-[6rem]">
-                <Card.Body className="text-center ">
-                  <Row className="">
-                    <Col xs={3} className="p-0 h-full">
-                      <Card.Img
-                        className="h-16 w-full hover:cursor-pointer"
-                        onClick={() => {
-                          setTerritoryNowData({
-                            ...item,
-                          });
-                          handleShowOpcoesModal();
-                        }}
-                        variant="top"
-                        src={item.map}
-                      ></Card.Img>
-                    </Col>
-                    <Col className="px-1">
-                      <Row className="justify-between flex">
-                        <Col
-                          className="font-bold text-base text-start ml-2 hover:cursor-pointer"
-                          name="Description"
-                        >
-                          {item.description}
-                        </Col>
-                        <Col className="" name="availeble">
-                          <div className="text-end text-base">
-                            {item.available ? (
-                              <span class="text-success flex items-center">
-                                Disponivel <GrStatusGood className="ml-1" />
-                              </span>
-                            ) : (
-                              <span class="text-danger flex items-center">
-                                Indisponivel{" "}
-                                <GrStatusCritical className="ml-1" />
-                              </span>
-                            )}
-                          </div>
-                        </Col>
-                      </Row>
-                      <Row className="w-full flex m-2" name="references">
-                        {item.references.map((ref, idx) => (
-                          <Badge
-                            bg="light"
-                            text="dark"
-                            className={
-                              "ml-2 border w-fit hover:cursor-pointer "
-                            }
-                            title={ref}
-                            onClick={() => {
-                              setTag(ref);
-                              setSearchTag(true);
-                            }}
-                          >
-                            {ref}
-                          </Badge>
-                        ))}
-                      </Row>
-                    </Col>
-                  </Row>
-                </Card.Body>
-              </Card>
-            </div>
-          ))}
-        </Container>
-        {showOpcoesModal && myModals()}
-      </>
-    );
-  }
-
   return (
     <>
-      <Container className="flex flex-wrap lg:justify-between justify-center ">
+      <Container className="flex flex-wrap lg:justify-evenly justify-center ">
         {collection.map((item, idx) => (
           <div id={item.id} key={idx} className="m-1">
-            <Card className="border rounded md:w-[20rem] md:h-[20rem]">
-              <Card.Body className="text-center h-full">
-                <Row className="h-1/2">
-                  <Card.Img
-                    className="h-full w-full hover:cursor-pointer"
-                    variant="top"
-                    src={item.map}
-                  ></Card.Img>
-                </Row>
-                <Row className="justify-between flex my-2 px-2">
-                  <Col
-                    className="px-1 font-bold text-base text-start hover:cursor-pointer"
-                    name="Description"
-                  >
-                    {item.description}
-                  </Col>
-                  <Col className="text-base" name="availeble">
-                    {item.available ? (
-                      <div class="text-success flex items-center ml-9">
-                        Disponivel <GrStatusGood className="ml-1" />
-                      </div>
-                    ) : (
-                      <div class="text-danger flex items-center ml-9">
-                        Indisponivel <GrStatusCritical className="ml-1" />
-                      </div>
-                    )}
-                  </Col>
-                </Row>
-                Referências
-                <Row className="w-full flex mx-1" name="references">
-                  {item.references.map((ref, idx) => (
-                    <Badge
-                      bg="light"
-                      text="dark"
-                      className={"ml-2 border w-fit "}
-                    >
-                      {ref}
-                    </Badge>
-                  ))}
-                </Row>
-                Observações
-                <Row className="w-full flex mx-1" name="obserations">
-                  {item.observation && (
-                    <p className="ml-1 text-start">{item.observation}</p>
-                  )}
-                  {!item.observation && (
-                    <p className="ml-1 text-start">Sem observações</p>
-                  )}
-                </Row>
-              </Card.Body>
-            </Card>
+            {!viewGrid && (
+              <CardsList
+                item={item}
+                handleShowOpcoesModal={handleShowOpcoesModal}
+                setTerritoryNowData={setTerritoryNowData}
+                setTag={setTag}
+                setSearchTag={setSearchTag}
+              />
+            )}
+            {viewGrid && (
+              <CardsGrid
+                item={item}
+                handleShowOpcoesModal={handleShowOpcoesModal}
+                setTerritoryNowData={setTerritoryNowData}
+                setTag={setTag}
+                setSearchTag={setSearchTag}
+              />
+            )}
           </div>
         ))}
       </Container>
-      {() => myModals()}
+      {showOpcoesModal && myModals()}
     </>
   );
 };

@@ -14,6 +14,13 @@ import { MdAddCircleOutline } from "react-icons/md";
 import { useFirestore } from "../../hooks/useFirestore";
 import { ImCross } from "react-icons/im";
 import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
+import {
+  AssignmentInfo,
+  AvailableStatus,
+  BoxOfText,
+  RefTags,
+} from "../../containers/Bandeja/shared";
+import { TimestampToDate } from "../shared";
 
 const TerritoryModal = ({ title, type, territory = {} }) => {
   const [image, setImage] = useState(
@@ -103,18 +110,14 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
         return;
       }
 
-      // add territories to firestore, if true, add image to storage
-
       if (territory.id) {
-        alert("Go update");
         await updateTerritories(
           territory.id,
           territories,
           myFile ? myFile : null
         );
       } else {
-        alert("go create");
-        //await setTerritories(territories, myFile);
+        await setTerritories(territories, myFile);
       }
     };
 
@@ -123,7 +126,6 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
         <Form onSubmit={handleSubmit}>
           <Modal.Body>
             <div className="m-0">
-              {/* <Form.Label htmlFor="mapaInput">Imagem Mapa</Form.Label> */}
               <Form.Label className="picture" htmlFor="mapaInput">
                 {image ? (
                   image
@@ -278,7 +280,7 @@ const MenuOpcoesModal = ({
   );
 };
 
-const DetailsModal = ({ title, territory }) => {
+const DetailsModal = ({ title, territory, viewImage }) => {
   const {
     description,
     available,
@@ -288,79 +290,104 @@ const DetailsModal = ({ title, territory }) => {
     requests,
     createdAt,
     updatedAt,
+    assignment,
   } = territory;
+
   return (
     <>
-      <Modal.Header closeButton>
-        <Modal.Title>{title}</Modal.Title>
+      <Modal.Header closeButton className="flex items-center">
+        <Modal.Title className="font-bold mr-6">{description}</Modal.Title>
+        <AvailableStatus value={available} />
       </Modal.Header>
 
-      <Modal.Body className="flex">
-        <Col xs={6}>
-          <Row name="image">
+      <Modal.Body>
+        <Row className="md:flex">
+          <Col className="">
             <Card.Img
+              onClick={() => viewImage()}
               className="h-full w-full hover:cursor-pointer"
               variant="top"
               src={map}
             ></Card.Img>
-          </Row>
-          <Row>
-            <Col name="Descrição">{description}</Col>
-            <Col name="Disponibilidade">
-              {available ? (
-                <div class="text-success flex items-center ml-9">
-                  Disponivel <GrStatusGood className="ml-1" />
-                </div>
-              ) : (
-                <div class="text-danger flex items-center ml-9">
-                  Indisponivel <GrStatusCritical className="ml-1" />
-                </div>
-              )}
-            </Col>
-          </Row>
-          <Row name="Referencias">
-            {references.map((ref, idx) => (
-              <Badge
-                bg="light"
-                text="dark"
-                key={idx}
-                className={"ml-2 border w-fit "}
-              >
-                {ref}
-              </Badge>
-            ))}
-          </Row>
-        </Col>
+          </Col>
 
-        <Col xs={6} className="text-end">
-          <Row name="Observação">{observation}</Row>
-          <Row name="Pedidos">
-            <Col>
-              <h5>Pedidos Mês</h5>
-              {requests}
-            </Col>
-            <Col>
-              <h5>Pedidos Total</h5>
-              {requests + 10}
-            </Col>
-          </Row>
-          <Row name="Datas">
-            {/* {createdAt} */}
-           {/*  {updatedAt ? updatedAt : ""} */}
-          </Row>
-          <Row name="Info de atribuição">
-            {!available && (
-              <>
-                <Row>Nome do Publicador</Row>
-                <Row>Data de atribuição</Row>
-                <Row>Atribuido por:</Row>
-              </>
+          <Col className="px-3 ml-2">
+            <div className="flex items-center my-1 justify-between">
+              <h5>Data de inclusão</h5>
+              <TimestampToDate
+                time={createdAt}
+                style={"bg-gray-100 border border-gray-600 px-2 rounded"}
+              />
+            </div>
+
+            {updatedAt && (
+              <div className="flex items-center my-1 justify-between">
+                <h5>Ultima atualização</h5>
+                <TimestampToDate
+                  time={updatedAt}
+                  style={"bg-gray-100 border border-gray-600 px-2 rounded"}
+                />
+              </div>
             )}
-          </Row>
-        </Col>
+
+            <BoxOfText
+              component={<RefTags item={{ references }} noCliquable />}
+              title={"Referências"}
+            />
+
+            {observation && (
+              <BoxOfText text={observation} title={"Observação"} />
+            )}
+
+            <div className="flex justify-between">
+              <div className="flex items-center space-x-2">
+                <h5>Pedidos Mês</h5>
+                <div className="bg-gray-100 border border-gray-600 px-2 rounded ">
+                  {requests}
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <h5>Pedidos Total</h5>
+                <div className="bg-gray-100 border border-gray-600 px-2 rounded ">
+                  {requests + 9}
+                </div>
+              </div>
+            </div>
+          </Col>
+        </Row>
+
+        <Row className="w-full flex justify-between items-center">
+          <Col className="py-2 ">
+            <div className="space-x-2 flex justify-center w-full">
+              <Button variant="secondary">Download</Button>
+              <Button variant="info">Enviar</Button>
+              <Button>Abrir</Button>
+            </div>
+          </Col>
+
+          <Col className="pl-8 pr-0 ">
+            {!available && (
+              <AssignmentInfo
+                publisher={assignment?.publisher.name}
+                date={<TimestampToDate time={assignment?.date} />}
+                responsible={assignment?.responsible.name}
+              />
+            )}
+          </Col>
+        </Row>
       </Modal.Body>
     </>
   );
 };
 
-export { TerritoryModal, MenuOpcoesModal, DetailsModal };
+const ViewImageModal = ({ image, closeSelf }) => {
+  return (
+    <>
+      <Modal.Body>
+        <Card.Img src={image} />
+      </Modal.Body>
+    </>
+  );
+};
+
+export { TerritoryModal, MenuOpcoesModal, DetailsModal, ViewImageModal };

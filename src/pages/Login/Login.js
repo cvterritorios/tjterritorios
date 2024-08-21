@@ -124,15 +124,13 @@ const Login = () => {
     const congregacaoToLog = await getDocWhere("congregacoes", where);
     const congregacaoId = await getDocWhere("congregacoes", where, true);
 
-    congregacaoToLog.responsible.map((responsavel) => {
-      if (responsavel.isLoged) {
-        console.log("Já está alguém logado no momento");
-        setError("Já está alguém logado no momento");
-        return;
+    congregacaoToLog.responsible.map((responsavel, idx) => {
+      if (idx === perfil) {
+        responsavel.isLoged = true;
+      } else {
+        responsavel.isLoged = false;
       }
     });
-
-    congregacaoToLog.responsible[perfil].isLoged = true;
 
     await updateDocument("congregacoes", congregacaoId, congregacaoToLog);
 
