@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Form,
   Button,
@@ -15,9 +15,12 @@ import {
 import { FaArrowDownShortWide, FaArrowDownWideShort } from "react-icons/fa6";
 
 // hooks
+import { useSessionStorage } from "../../hooks/useSessionStorage";
+import { useFirestore } from "../../hooks/useFirestore";
+
 import Bandeja from "../../containers/Bandeja/Bandeja";
 
-const ToolsBar = ({create}) => {
+const ToolsBar = ({ create }) => {
   const [searchTxt, setSearchTxt] = useState("");
   const [viewMode, setViewMode] = useState(false);
   const [isFilterUn, setIsFilterAn] = useState(false);
@@ -27,6 +30,32 @@ const ToolsBar = ({create}) => {
   const [orderDate, setOrderDate] = useState(false);
   const [orderRequests, setOrderRequests] = useState(false);
   const [orderAsc, setOrderAsc] = useState(false);
+
+  const [congregacoesOptions, setCongregacoesOptions] = useState("");
+  const [congregacaoSelected, setCongregacaoSelected] = useState("");
+
+
+  const { isAdmin } = useSessionStorage();
+  const { getCollection } = useFirestore();
+
+  const makeCongregacoesOptions = async () => {
+    const myList = await getCollection("congregacoes");
+
+    const options = myList?.map((congregacao) => {
+      return (
+        <option key={congregacao.email} value={congregacao.id}>
+          {congregacao.name}
+        </option>
+      );
+    });
+
+    setCongregacoesOptions(options);
+    // console.log(myCon);
+  };
+
+  useEffect(() => {
+    makeCongregacoesOptions();
+  }, []);
 
   return (
     <>
@@ -45,16 +74,27 @@ const ToolsBar = ({create}) => {
           aria-label="toolsbar"
           className="my-3 h-10 md:w-auto w-full border-2"
         >
-          <Button className="border-0 bg-gray-50 hover:bg-gray-50"></Button>
+          <Button className="border-0 bg-gray-50 hover:bg-gray-50 active:bg-gray-50"></Button>
 
-          <Button
-            variant="light"
-            title="Adicionar Território"
-            className="border-0"
-            onClick={create}
-          >
-            <MdAddCircleOutline size={24} />
-          </Button>
+          {!isAdmin() && (
+            <Button
+              variant="light"
+              title="Adicionar Território"
+              className="border-0"
+              onClick={create}
+            >
+              <MdAddCircleOutline size={24} />
+            </Button>
+          )}
+
+          {isAdmin() && (
+            <Form.Select className="border-0 bg-gray-50" size="sm" onChange={(e) => {
+              setCongregacaoSelected(e.target.value);
+            }}>
+              <option value="">Seleciona uma congregação</option>
+              {congregacoesOptions}
+            </Form.Select>
+          )}
 
           <DropdownButton
             variant="light"
@@ -190,6 +230,7 @@ const ToolsBar = ({create}) => {
         setTag={setSearchTxt}
         isOrdered={orderDate ? "createdAt" : orderRequests ? "requests" : false}
         orderDir={orderAsc ? "asc" : "desc"}
+        congregacaoId={congregacaoSelected}
       />
     </>
   );

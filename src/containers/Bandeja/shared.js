@@ -200,13 +200,13 @@ const BoxOfText = ({ text = "", component = null, title }) => {
     "border bg-gray-100 my-2 border-black w-full rounded pt-2.5 p-2 text-xs ";
 
   return (
-    <div className="relative border border-white w-full rounded">
+    <div className="relative border-2 border-transparent w-full ">
       <div className="absolute bg-gray-200 border border-black rounded px-1 text-[10px] top-0.5 start-5 w-fit">
         {title}
       </div>
       {text && (
         <textarea disabled className={format}>
-          {text + text + text + text + text}
+          {text}
         </textarea>
       )}
       {component && <div className={format}>{component}</div>}
@@ -219,7 +219,7 @@ const AssignmentInfo = ({ publisher, date, responsible }) => {
     "border bg-gray-100 my-2 border-black w-full rounded py-2 px-2.5";
 
   return (
-    <div className="relative border border-transparent w-full rounded">
+    <div className="relative border-2 border-transparent w-full ">
       <div className="absolute bg-gray-200 border border-black rounded px-1 text-[10px] top-0.5 start-5 w-fit">
         Atribuido em {date}
       </div>

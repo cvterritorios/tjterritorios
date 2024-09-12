@@ -1,3 +1,4 @@
+import { getAuth } from "firebase/auth";
 import { db, storage } from "../services/firebase";
 import {
   collection,
@@ -20,6 +21,7 @@ export const useFirestore = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
 
+  const auth = getAuth();
   //cleanup
   const [cancelled, setCancelled] = useState(false);
 
@@ -48,6 +50,22 @@ export const useFirestore = () => {
     } else if (mode === "end") {
       setLoading(false);
     }
+  }
+
+  async function nowCongregationId(isAdmin = false) {
+    // get in firebase current user logged
+    const user = auth.currentUser;
+
+    if (!isAdmin) {
+      const congregacaoLogged = await getDocWhere("congregacoes", {
+        attr: "uid",
+        comp: "==",
+        value: user.uid,
+      });
+
+      return congregacaoLogged.id;
+    }
+    return false;
   }
 
   // functions - sets
@@ -81,7 +99,9 @@ export const useFirestore = () => {
     const collect = "territorios";
     validate("start");
 
-    const res = await addDoc(collection(db, collect), data);
+    const cid = await nowCongregationId();
+
+    const res = await addDoc(collection(db, collect), { ...data, cid });
 
     // upload do map em data para o storage
     const mapRef = ref(storage, `territorios/${res.id}/mapa.png`);
@@ -173,7 +193,6 @@ export const useFirestore = () => {
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {
-        console.log("Document data:", docSnap.data());
         validate("end");
         return docSnap.data();
       } else {
@@ -298,6 +317,76 @@ export const useFirestore = () => {
     }
   };
 
+  const getTerritories = async (
+    ord = { attr: "", dir: "" },
+    isAdmin = false,
+    congregacaoId = false
+  ) => {
+    validate("start");
+
+    const collect = "territorios";
+    const cid =
+      congregacaoId !== undefined
+        ? congregacaoId
+        : await nowCongregationId(isAdmin);
+
+    let q = undefined;
+
+    if (ord.attr) {
+      q = query(
+        collection(db, collect),
+        cid && where("cid", "==", cid),
+        orderBy(ord.attr, ord.dir)
+      );
+    } else {
+      q = query(collection(db, collect), cid && where("cid", "==", cid));
+    }
+
+    const res = await getDocsQuery(q);
+
+    validate("end");
+    return res;
+  };
+
+  const getTerritoriesWhere = async (
+    whr = { attr: "", comp: "", value: "" },
+    ord = { attr: "", dir: "" },
+    isAdmin = false,
+    congregacaoId = false
+  ) => {
+    //where {attr, comp, value}
+    validate("start");
+
+    const collect = "territorios";
+    const cid =
+      congregacaoId !== false
+        ? congregacaoId
+        : await nowCongregationId(isAdmin);
+
+    console.log(cid);
+
+    let q = undefined;
+
+    if (ord.attr) {
+      q = query(
+        collection(db, collect),
+        where(whr.attr, whr.comp, whr.value),
+        cid && where("cid", "==", cid),
+        orderBy(ord.attr, ord.dir)
+      );
+    } else {
+      q = query(
+        collection(db, collect),
+        where(whr.attr, whr.comp, whr.value),
+        cid !== false ? where("cid", "==", cid):""
+      );
+    }
+
+    const res = await getDocsQuery(q);
+
+    validate("end");
+    return res;
+  };
   // functions - gets
 
   // useEffect
@@ -319,5 +408,7 @@ export const useFirestore = () => {
     getDocWhere,
     getCollection,
     getCollectionWhere,
+    getTerritories,
+    getTerritoriesWhere,
   };
 };

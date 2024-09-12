@@ -78,6 +78,7 @@ const Register = () => {
       if (password !== passwordConfirm) {
         setError("Confirme a sua palavra passe corretamente!");
         console.log("Confirme a sua palavra passe corretamente!");
+        
         setRegisterLoading(false);
 
         return;

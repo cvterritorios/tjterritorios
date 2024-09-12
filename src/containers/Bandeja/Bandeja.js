@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Container, Card, Row, Col, Badge, Modal } from "react-bootstrap";
 import { useFirestore } from "../../hooks/useFirestore";
-import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
+import { useSessionStorage } from "../../hooks/useSessionStorage";
 
 import {
   DetailsModal,
@@ -18,6 +18,7 @@ const Bandeja = ({
   setTag,
   isOrdered = false,
   orderDir,
+  congregacaoId = false,
 }) => {
   const [collection, setCollection] = useState([]);
   const [territoryNowData, setTerritoryNowData] = useState({});
@@ -32,19 +33,24 @@ const Bandeja = ({
 
   const handleShowOpcoesModal = () => setShowOpcoesModal(true);
   const handleCloseOpcoesModal = () => setShowOpcoesModal(false);
+  const handleClosImage = () => setShowViewImageModal(false);
 
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const {
+    getTerritories,
     getCollection,
-    getCollectionWhere,
+    getTerritoriesWhere,
     error: dataError,
     loading: dataLoading,
   } = useFirestore();
+  const { isAdmin } = useSessionStorage();
 
   const startBandeja = async () => {
     setLoading(true);
+
+    console.log(congregacaoId==="");
 
     if (isOrdered) {
       setMyOrderBy({ attr: isOrdered, dir: orderDir });
@@ -52,14 +58,16 @@ const Bandeja = ({
 
     if (searching) {
       if (searchTag) {
-        const collsT = await getCollectionWhere(
+        const collsT = await getTerritoriesWhere(
           "territorios",
           {
             attr: "references",
             comp: "array-contains",
             value: searching,
           },
-          isOrdered && myOrderBy
+          isOrdered && myOrderBy,
+          isAdmin(),
+          congregacaoId
         );
 
         setCollection(collsT);
@@ -68,8 +76,7 @@ const Bandeja = ({
         // setSearchTag(false);
         return;
       } else {
-        const coll = await getCollectionWhere(
-          "territorios",
+        const coll = await getTerritoriesWhere(
           {
             attr: "description",
             comp: "==",
@@ -84,29 +91,35 @@ const Bandeja = ({
     }
 
     if (filter[0]) {
-      const coll = await getCollectionWhere(
-        "territorios",
+      const coll = await getTerritoriesWhere(
         {
           attr: "available",
           comp: "==",
           value: true,
         },
-        isOrdered ? myOrderBy : false
+        isOrdered ? myOrderBy : false,
+        isAdmin(),
+        congregacaoId === "" ? false : congregacaoId
       );
       setCollection(coll);
     } else if (filter[1]) {
-      const coll = await getCollectionWhere(
-        "territorios",
+      const coll = await getTerritoriesWhere(
         {
           attr: "available",
           comp: "==",
           value: false,
         },
-        isOrdered && myOrderBy
+        isOrdered ? myOrderBy : false,
+        isAdmin(),
+        congregacaoId
       );
       setCollection(coll);
     } else {
-      const coll = await getCollection("territorios", isOrdered && myOrderBy);
+      const coll = await getTerritories(
+        isOrdered && myOrderBy,
+        isAdmin(),
+        congregacaoId
+      );
       setCollection(coll);
     }
     setLoading(false);
@@ -114,8 +127,9 @@ const Bandeja = ({
 
   useEffect(() => {
     startBandeja();
+
     if (error) setError(error);
-  }, [error, filter, searching, viewGrid, isOrdered, orderDir]);
+  }, [error, filter, searching, viewGrid, isOrdered, orderDir, congregacaoId]);
 
   if (loading) {
     <p>carregando..</p>;
@@ -163,10 +177,13 @@ const Bandeja = ({
           className="index-34"
           size="xl"
           show={showViewImageModal}
-          onHide={() => setShowViewImageModal(false)}
+          onHide={handleClosImage}
           centered
         >
-          <ViewImageModal image={territoryNowData.map} />
+          <ViewImageModal
+            image={territoryNowData.map}
+            closeSelf={handleClosImage}
+          />
         </Modal>
 
         {/* Opcao Update - Editar */}

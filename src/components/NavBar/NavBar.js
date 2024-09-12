@@ -43,7 +43,7 @@ const NavBar = () => {
       comp: "==",
       value: user.uid,
     });
-    // console.warn(u);
+    console.warn(cong);
     setUserNow(cong);
   }
 
@@ -63,7 +63,7 @@ const NavBar = () => {
 
     function checkAdmInList(list) {
       list.forEach((adm) => {
-        if (adm == user?.displayName) {
+        if (adm.uid == user?.uid) {
           setIsAdmin(true);
         }
       });
@@ -199,6 +199,12 @@ const NavBar = () => {
 
               {isAdmin && (
                 <Card>
+                  <Row>
+                    <Col >
+                      <strong>Cargo:</strong>
+                      <span> {'ADMINISTRADOR'}</span>
+                    </Col>
+                  </Row>
                   <Row>
                     <Col xs={7} md={5}>
                       <strong>Nome:</strong>

@@ -4,15 +4,16 @@ const Footer = () => {
   return (
     <>
       <footer
-        className="d-flex align-items-center pt-4 justify-content-center"
+        className="flex items-center p-4 justify-center bg-gray-100"
         style={{
           height: "100",
           flexDirection: "column",
-          backgroundColor: "#edf3f6",
         }}
       >
         <p>
-          Por Mateus Luis & Marcos Assunção <NavLink to="about">Sobre</NavLink>
+          <NavLink to="about" className="text-blue-500">
+            Sobre
+          </NavLink>
         </p>
         <p>TJ Territorios &copy; 2024</p>
       </footer>

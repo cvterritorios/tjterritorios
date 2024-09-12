@@ -280,7 +280,7 @@ const MenuOpcoesModal = ({
   );
 };
 
-const DetailsModal = ({ title, territory, viewImage }) => {
+const DetailsModal = ({ territory, viewImage }) => {
   const {
     description,
     available,
@@ -300,18 +300,27 @@ const DetailsModal = ({ title, territory, viewImage }) => {
         <AvailableStatus value={available} />
       </Modal.Header>
 
-      <Modal.Body>
-        <Row className="md:flex">
-          <Col className="">
+      <Modal.Body className="pt-0">
+        <div className="md:space-x-2 md:flex md:items-center md:justify-between">
+          <div className="h-full space-y-3 md:w-1/2">
             <Card.Img
               onClick={() => viewImage()}
               className="h-full w-full hover:cursor-pointer"
               variant="top"
               src={map}
             ></Card.Img>
-          </Col>
+            <div className="space-x-2 flex justify-center w-full">
+              <Button size="sm" variant="secondary">
+                Download
+              </Button>
+              <Button size="sm" variant="info">
+                Enviar
+              </Button>
+              <Button size="sm">Abrir</Button>
+            </div>
+          </div>
 
-          <Col className="px-3 ml-2">
+          <div className="md:px-3  md:w-1/2">
             <div className="flex items-center my-1 justify-between">
               <h5>Data de inclusão</h5>
               <TimestampToDate
@@ -353,28 +362,18 @@ const DetailsModal = ({ title, territory, viewImage }) => {
                 </div>
               </div>
             </div>
-          </Col>
-        </Row>
 
-        <Row className="w-full flex justify-between items-center">
-          <Col className="py-2 ">
-            <div className="space-x-2 flex justify-center w-full">
-              <Button variant="secondary">Download</Button>
-              <Button variant="info">Enviar</Button>
-              <Button>Abrir</Button>
-            </div>
-          </Col>
-
-          <Col className="pl-8 pr-0 ">
             {!available && (
-              <AssignmentInfo
-                publisher={assignment?.publisher.name}
-                date={<TimestampToDate time={assignment?.date} />}
-                responsible={assignment?.responsible.name}
-              />
+              <div className="mt-2">
+                <AssignmentInfo
+                  publisher={assignment?.publisher.name}
+                  date={<TimestampToDate time={assignment?.date} />}
+                  responsible={assignment?.responsible.name}
+                />
+              </div>
             )}
-          </Col>
-        </Row>
+          </div>
+        </div>
       </Modal.Body>
     </>
   );
@@ -383,7 +382,15 @@ const DetailsModal = ({ title, territory, viewImage }) => {
 const ViewImageModal = ({ image, closeSelf }) => {
   return (
     <>
-      <Modal.Body>
+      <Modal.Body className="relative">
+        <Button
+        variant="transparent"
+          className="text-white absolute end-7 top-7 cursor-pointer"
+          onClick={closeSelf}
+        >
+          <ImCross size={30} />
+        </Button>
+
         <Card.Img src={image} />
       </Modal.Body>
     </>

@@ -20,6 +20,7 @@ export const useAuthentication = () => {
   const {
     getDocId,
     getDocWhere,
+    updateDocument,
     setDocument,
     error: dataError,
   } = useFirestore();
@@ -40,7 +41,14 @@ export const useAuthentication = () => {
   }
 
   // register
-  const createUser = async (data) => {
+  const createUser = async ({
+    email,
+    password,
+    name,
+    accessConde,
+    responsible,
+    adm = false,
+  }) => {
     checkIfCancelled();
 
     setLoading(true);
@@ -49,13 +57,13 @@ export const useAuthentication = () => {
     try {
       const { user } = await createUserWithEmailAndPassword(
         auth,
-        data.email,
-        data.password
+        email,
+        password
       );
 
       // console.log("1º", data);
 
-      await updateProfile(user, { displayName: data.name });
+      await updateProfile(user, { displayName: name });
 
       const userData = getUser();
 
@@ -66,13 +74,25 @@ export const useAuthentication = () => {
         adm: isAdmin() ? true : null,
       };
 
-      if (!data.adm) {
+      if (adm) {
+        const adminsID = "admins";
+        const adminsList = await getDocId("admins", adminsID);
+
+        const newList = [
+          ...adminsList.list,
+          { displayName: name, uid: "user.uid" },
+        ];
+
+        await updateDocument("admins", adminsID, { list: newList });
+      }
+
+      if (!adm) {
         const congreg = {
           uid: user.uid,
-          name: data.name,
-          email: data.email,
-          accessCode: data.accessConde,
-          responsible: data.responsible,
+          name: name,
+          email: email,
+          accessCode: accessConde,
+          responsible: responsible,
         };
 
         await setDocument("congregacoes", congreg);
@@ -90,8 +110,6 @@ export const useAuthentication = () => {
       //const loadingScreen = document.getElementById("loading-screen");
       //loadingScreen.classList.add("d-none");
       //loadingScreen.classList.remove("loading");
-
-      return user;
     } catch (error) {
       console.log(error.messeger);
       console.log(typeof error.messeger);
