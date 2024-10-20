@@ -10,15 +10,18 @@ import {
   ViewImageModal,
 } from "../../components/Modal/Modal";
 import { AvailableStatus, CardsGrid, CardsList, RefTags } from "./shared";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Bandeja = ({
+  collectionSearch,
   viewGrid,
   filter = [],
   searching,
   setTag,
-  isOrdered = false,
+  isOrdered,
   orderDir,
   congregacaoId = false,
+  setListaTerritorios,
 }) => {
   const [collection, setCollection] = useState([]);
   const [territoryNowData, setTerritoryNowData] = useState({});
@@ -26,6 +29,7 @@ const Bandeja = ({
   const [searchTag, setSearchTag] = useState(false);
   const [myOrderBy, setMyOrderBy] = useState({});
 
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showOpcoesModal, setShowOpcoesModal] = useState(false);
@@ -40,88 +44,87 @@ const Bandeja = ({
 
   const {
     getTerritories,
-    getCollection,
     getTerritoriesWhere,
     error: dataError,
     loading: dataLoading,
   } = useFirestore();
-  const { isAdmin } = useSessionStorage();
+  const { isAdmin } = useAuth();
 
   const startBandeja = async () => {
     setLoading(true);
 
-    console.log(congregacaoId==="");
+    setMyOrderBy({ attr: isOrdered, dir: orderDir });
 
-    if (isOrdered) {
-      setMyOrderBy({ attr: isOrdered, dir: orderDir });
-    }
-
-    if (searching) {
-      if (searchTag) {
-        const collsT = await getTerritoriesWhere(
-          "territorios",
-          {
-            attr: "references",
-            comp: "array-contains",
-            value: searching,
-          },
-          isOrdered && myOrderBy,
-          isAdmin(),
-          congregacaoId
-        );
-
-        setCollection(collsT);
-
-        setLoading(false);
-        // setSearchTag(false);
-        return;
-      } else {
-        const coll = await getTerritoriesWhere(
-          {
-            attr: "description",
-            comp: "==",
-            value: searching,
-          },
-          isOrdered && myOrderBy
-        );
-        setCollection(coll);
-        setLoading(false);
-        return;
+    function checkCongToAdmin() {
+      if (isAdmin && !congregacaoId) {
+        alert("Você precisa selecionar uma congregação");
+        return true;
       }
+      return false;
     }
 
-    if (filter[0]) {
-      const coll = await getTerritoriesWhere(
-        {
-          attr: "available",
-          comp: "==",
-          value: true,
-        },
-        isOrdered ? myOrderBy : false,
-        isAdmin(),
-        congregacaoId === "" ? false : congregacaoId
-      );
+    if (searchTag) {
+      const where = {
+        attr: "references",
+        comp: "array-contains",
+        value: searching,
+      };
+      const order = { attr: isOrdered, dir: orderDir };
+
+      const collsT = await getTerritoriesWhere({
+        whr: where,
+        congregacaoId: congregacaoId,
+        isAdmin: isAdmin,
+        ord: order,
+      });
+
+      setCollection(collsT);
+      setLoading(false);
+      return;
+    }
+
+    if (filter[0] && !checkCongToAdmin()) {
+      const where = {
+        attr: "available",
+        comp: "==",
+        value: true,
+      };
+
+      const order = { attr: isOrdered, dir: orderDir };
+
+      const coll = await getTerritoriesWhere({
+        whr: where,
+        congregacaoId: congregacaoId,
+        isAdmin: isAdmin,
+        ord: order,
+      });
       setCollection(coll);
-    } else if (filter[1]) {
-      const coll = await getTerritoriesWhere(
-        {
-          attr: "available",
-          comp: "==",
-          value: false,
-        },
-        isOrdered ? myOrderBy : false,
-        isAdmin(),
-        congregacaoId
-      );
+    } else if (filter[1] && !checkCongToAdmin()) {
+      const where = {
+        attr: "available",
+        comp: "==",
+        value: false,
+      };
+      const order = { attr: isOrdered, dir: orderDir };
+
+      const coll = await getTerritoriesWhere({
+        whr: where,
+        congregacaoId: congregacaoId,
+        isAdmin: isAdmin,
+        ord: order,
+      });
+
       setCollection(coll);
     } else {
       const coll = await getTerritories(
         isOrdered && myOrderBy,
-        isAdmin(),
+        isAdmin,
         congregacaoId
       );
       setCollection(coll);
+      setListaTerritorios(coll);
     }
+
     setLoading(false);
   };
 
@@ -146,13 +149,14 @@ const Bandeja = ({
           centered
         >
           <MenuOpcoesModal
-            id={territoryNowData.id}
             description={territoryNowData.description}
             available={territoryNowData.available}
             closeSelf={() => handleCloseOpcoesModal()}
+            isAdmin={isAdmin}
             /* show Modals opcoes */
             show_Update={() => setShowUpdateModal(true)}
             show_Read={() => setShowDetailsModal(true)}
+            show_Delete={() => setShowDeleteModal(true)}
           />
         </Modal>
 
@@ -201,6 +205,23 @@ const Bandeja = ({
             territory={territoryNowData}
           />
         </Modal>
+
+        {/* Opcao Delete - Eliminar */}
+        <Modal
+          size="md"
+          show={showDeleteModal}
+          onHide={() => setShowDeleteModal(false)}
+          backdrop="static"
+          keyboard={false}
+          centered
+        >
+          <TerritoryModal
+            title={"Eliminar Território"}
+            type={"delete"}
+            territory={territoryNowData}
+            closeSelf={() => setShowDeleteModal(false)}
+          />
+        </Modal>
       </>
     );
   };
@@ -217,6 +238,7 @@ const Bandeja = ({
                 setTerritoryNowData={setTerritoryNowData}
                 setTag={setTag}
                 setSearchTag={setSearchTag}
+                noCliquable={!congregacaoId}
               />
             )}
             {viewGrid && (
@@ -226,6 +248,7 @@ const Bandeja = ({
                 setTerritoryNowData={setTerritoryNowData}
                 setTag={setTag}
                 setSearchTag={setSearchTag}
+                noCliquable={!congregacaoId}
               />
             )}
           </div>

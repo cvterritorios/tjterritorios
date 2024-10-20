@@ -1,65 +1,59 @@
 import { useState, useEffect } from "react";
 
+// Hook customizado para manipular dados na sessionStorage
 export const useSessionStorage = () => {
-  const [loading, setLoading] = useState(null);
+  const [cancelled, setCancelled] = useState(false); // Estado para verificar cancelamentos
 
-  //cleanup
-  const [cancelled, setCancelled] = useState(false);
-
+  // Função para verificar se o hook foi cancelado
   function checkIfCancelled() {
     if (cancelled) return;
   }
 
-  // functions - sets
+  // Define dados do usuário na sessionStorage
   const setUserInSession = (data = { type: "", email: "", code: "" }) => {
     try {
-      sessionStorage.setItem("userType", [data.type]);
-      sessionStorage.setItem("userEmail", [data.email]);
-      sessionStorage.setItem("userCode", [data.code]);
-
+      sessionStorage.setItem("userType", data.type);
+      sessionStorage.setItem("userEmail", data.email);
+      sessionStorage.setItem("userCode", data.code);
       return true;
     } catch (error) {
-      console.log(error.messeger);
-      console.log(typeof error.messeger);
-
-      //   systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
+      console.log(error.message); // Corrigido de 'messeger' para 'message'
+      return false;
     }
   };
 
+  // Remove dados do usuário da sessionStorage
+  const removeUserInSession = () => {
+    sessionStorage.removeItem("userType");
+    sessionStorage.removeItem("userEmail");
+    sessionStorage.removeItem("userCode");
+    return true;
+  };
+
+  // Verifica se o usuário na sessão é admin
   const isAdmin = () => {
-    //setUserInSession({ type: "null", code: "null", email: "null" });
-
-    return sessionStorage.getItem("userType").includes("ADM") ? true : false;
+    const userType = sessionStorage.getItem("userType");
+    return userType && userType.includes("ADM");
   };
 
-  // functions - gets
+  // Obtém os dados do usuário da sessionStorage
   const getUser = () => {
-    try {
-      const data = {
-        type: sessionStorage.getItem("userType"),
-        email: sessionStorage.getItem("userEmail"),
-        code: sessionStorage.getItem("userCode"),
-      };
-
-      return data;
-    } catch (error) {
-      console.log(error.messeger);
-      console.log(typeof error.messeger);
-
-      //   systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
-    }
+    const data = {
+      type: sessionStorage.getItem("userType"),
+      email: sessionStorage.getItem("userEmail"),
+      code: sessionStorage.getItem("userCode"),
+    };
+    return data.type == null ? null : data;
   };
 
-  // useEffect
+  // Cleanup quando o componente for desmontado
   useEffect(() => {
     return () => setCancelled(true);
   }, []);
 
   return {
-    loading,
-    //sets
     setUserInSession,
-    //functions
+    removeUserInSession,
     isAdmin,
     getUser,
   };

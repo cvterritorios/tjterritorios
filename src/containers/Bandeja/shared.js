@@ -59,29 +59,31 @@ const AvailableStatus = ({ item = {}, value = false, isPaint = false }) => {
           )}
         </>
       )}
-      {!value &&  <>
-      {item && (
+      {!value && (
         <>
-          {item.available ? (
-            <span
-              className={`text-success flex items-center ${
-                isPaint ? "bg-green-50" : ""
-              } `}
-            >
-              Disponivel <GrStatusGood size={16} className="ml-1" />
-            </span>
-          ) : (
-            <span
-              className={`text-danger flex items-center ${
-                isPaint ? "bg-red-50" : ""
-              } `}
-            >
-              Indisponivel <RxCrossCircled size={16} className="ml-1" />
-            </span>
+          {item && (
+            <>
+              {item.available ? (
+                <span
+                  className={`text-success flex items-center ${
+                    isPaint ? "bg-green-50" : ""
+                  } `}
+                >
+                  Disponivel <GrStatusGood size={16} className="ml-1" />
+                </span>
+              ) : (
+                <span
+                  className={`text-danger flex items-center ${
+                    isPaint ? "bg-red-50" : ""
+                  } `}
+                >
+                  Indisponivel <RxCrossCircled size={16} className="ml-1" />
+                </span>
+              )}
+            </>
           )}
         </>
       )}
-      </>}
     </>
   );
 };
@@ -92,6 +94,7 @@ const CardsGrid = ({
   setTerritoryNowData,
   setTag,
   setSearchTag,
+  noCliquable = false,
 }) => {
   const handleClick = (item) => {
     setTerritoryNowData({
@@ -128,9 +131,18 @@ const CardsGrid = ({
           </Row>
 
           <Row className="w-full flex m-auto" name="references">
-            <RefTags item={item} setTag={setTag} setSearchTag={setSearchTag} />
+            <RefTags
+              item={item}
+              setTag={setTag}
+              setSearchTag={setSearchTag}
+              noCliquable={noCliquable}
+            />
+
           </Row>
+          
         </div>
+        
+        {BoxOfText({text: item.observation, title: "Observação" })}
       </Card.Body>
     </Card>
   );
@@ -142,6 +154,7 @@ const CardsList = ({
   setTerritoryNowData,
   setTag,
   setSearchTag,
+  noCliquable = false,
 }) => {
   const handleClick = (item) => {
     setTerritoryNowData({
@@ -186,6 +199,7 @@ const CardsList = ({
                 item={item}
                 setTag={setTag}
                 setSearchTag={setSearchTag}
+                noCliquable={noCliquable}
               />
             </Row>
           </Col>
@@ -199,13 +213,17 @@ const BoxOfText = ({ text = "", component = null, title }) => {
   const format =
     "border bg-gray-100 my-2 border-black w-full rounded pt-2.5 p-2 text-xs ";
 
+    if(!text){
+      return <div className="w-full h-16 pt-3"> - Sem {title} - </div>
+    }
+
   return (
     <div className="relative border-2 border-transparent w-full ">
       <div className="absolute bg-gray-200 border border-black rounded px-1 text-[10px] top-0.5 start-5 w-fit">
         {title}
       </div>
       {text && (
-        <textarea disabled className={format}>
+        <textarea disabled className={format} value={text}>
           {text}
         </textarea>
       )}

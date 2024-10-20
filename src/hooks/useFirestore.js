@@ -9,6 +9,7 @@ import {
   getDoc,
   addDoc,
   updateDoc,
+  deleteDoc,
   orderBy,
   Timestamp,
 } from "firebase/firestore";
@@ -211,11 +212,11 @@ export const useFirestore = () => {
     validate("end");
   };
 
-  const getDocWhere = async (
-    collect,
+  const getDocWhere = async ({
+    collect= "",
     whr = { attr: "", comp: "", value: "" },
-    id = false
-  ) => {
+    id = false,
+  }) => {
     //where {attr, comp, value}
     validate("start");
 
@@ -268,12 +269,6 @@ export const useFirestore = () => {
       console.log(typeof error.messeger);
 
       let systemErrorMessage;
-
-      /* if (error.message.includes("email-already")) {
-        systemErrorMessage = "E-mail já cadastrado.";
-      } else {
-        systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
-      } */
       systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
 
       setError(systemErrorMessage);
@@ -348,22 +343,19 @@ export const useFirestore = () => {
     return res;
   };
 
-  const getTerritoriesWhere = async (
+  const getTerritoriesWhere = async ({
     whr = { attr: "", comp: "", value: "" },
     ord = { attr: "", dir: "" },
     isAdmin = false,
-    congregacaoId = false
-  ) => {
-    //where {attr, comp, value}
+    congregacaoId = "",
+  }) => {
     validate("start");
 
     const collect = "territorios";
     const cid =
-      congregacaoId !== false
-        ? congregacaoId
-        : await nowCongregationId(isAdmin);
+      congregacaoId !== "" ? congregacaoId : await nowCongregationId(isAdmin);
 
-    console.log(cid);
+    // console.log(cid);
 
     let q = undefined;
 
@@ -378,7 +370,7 @@ export const useFirestore = () => {
       q = query(
         collection(db, collect),
         where(whr.attr, whr.comp, whr.value),
-        cid !== false ? where("cid", "==", cid):""
+        cid !== false ? where("cid", "==", cid) : ""
       );
     }
 
@@ -387,7 +379,30 @@ export const useFirestore = () => {
     validate("end");
     return res;
   };
-  // functions - gets
+
+  // function - delete
+
+  const deleteTerritory = async (documentId = "") => {
+    validate("start");
+    const collect = "territorios";
+    let systemErrorMessage;
+
+    try {
+      await deleteDoc(doc(db, collect, documentId));
+      validate("end");
+      // refresh page
+      setTimeout(() => {
+        window.location.reload();
+      }, 200);
+    } catch (error) {
+      console.log(error.messeger);
+      console.log(typeof error.messeger);
+
+      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
+
+      setError(systemErrorMessage);
+    }
+  };
 
   // useEffect
   useEffect(() => {
@@ -410,5 +425,7 @@ export const useFirestore = () => {
     getCollectionWhere,
     getTerritories,
     getTerritoriesWhere,
+    //delete
+    deleteTerritory,
   };
 };

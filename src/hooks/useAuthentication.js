@@ -25,7 +25,8 @@ export const useAuthentication = () => {
     error: dataError,
   } = useFirestore();
 
-  const { setUserInSession, getUser, isAdmin } = useSessionStorage();
+  const { setUserInSession, getUser, isAdmin, removeUserInSession } =
+    useSessionStorage();
 
   useEffect(() => {
     if (dataError) setError(dataError);
@@ -131,8 +132,12 @@ export const useAuthentication = () => {
   // logout
   const logout = () => {
     checkIfCancelled();
+    setLoading(true);
 
+    removeUserInSession();
     signOut(auth);
+
+    setLoading(false);
   };
 
   // login
@@ -153,7 +158,11 @@ export const useAuthentication = () => {
 
         await signInWithEmailAndPassword(auth, data.email, data.password);
 
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+          window.location.reload();
+        }, 300);
+
         return;
       }
 
@@ -195,7 +204,12 @@ export const useAuthentication = () => {
 
       setError(systemErrorMessage);
     }
-    setLoading(false);
+
+    setTimeout(() => {
+      setLoading(false);
+      window.location.reload();
+    }, 300);
+    
   };
 
   useEffect(() => {

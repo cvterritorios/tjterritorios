@@ -19,24 +19,34 @@ import { useSessionStorage } from "../../hooks/useSessionStorage";
 import { useFirestore } from "../../hooks/useFirestore";
 
 import Bandeja from "../../containers/Bandeja/Bandeja";
+import { useAuth } from "../../contexts/AuthContext";
 
-const ToolsBar = ({ create }) => {
+const ToolsBar = ({ create, setError, setLoading }) => {
+  const [collectionSearch, setCollectionSearch] = useState([]);
+
   const [searchTxt, setSearchTxt] = useState("");
   const [viewMode, setViewMode] = useState(false);
-  const [isFilterUn, setIsFilterAn] = useState(false);
+  const [isFilterUn, setIsFilterUn] = useState(false);
   const [isFilterAv, setIsFilterAv] = useState(false);
 
-  const [orderDescription, setOrderDescription] = useState(false);
+  // lista de territorios
+  const [listaTerritorios, setListaTerritorios] = useState([]);
+
+  const [orderDescription, setOrderDescription] = useState(true);
   const [orderDate, setOrderDate] = useState(false);
   const [orderRequests, setOrderRequests] = useState(false);
-  const [orderAsc, setOrderAsc] = useState(false);
+  const [orderAsc, setOrderAsc] = useState(true);
 
   const [congregacoesOptions, setCongregacoesOptions] = useState("");
   const [congregacaoSelected, setCongregacaoSelected] = useState("");
 
-
-  const { isAdmin } = useSessionStorage();
-  const { getCollection } = useFirestore();
+  const { isAdmin, currentUser: user, isAuth } = useAuth();
+  const {
+    getCollection,
+    getDocWhere,
+    error: errorData,
+    loading: loadingData,
+  } = useFirestore();
 
   const makeCongregacoesOptions = async () => {
     const myList = await getCollection("congregacoes");
@@ -53,20 +63,69 @@ const ToolsBar = ({ create }) => {
     // console.log(myCon);
   };
 
+  const getCongregationIdNow = async () => {
+    const myCongregation = await getDocWhere({
+      collect: "congregacoes",
+      whr: {
+        attr: "email",
+        comp: "==",
+        value: user.email,
+      },
+    });
+
+    console.log(myCongregation);
+    // setCongregacaoSelected(myCongregation.id);
+  };
+
+  const handleClearButton = () => {
+    setIsFilterAv(false);
+    setIsFilterUn(false);
+    setSearchTxt("");
+    setOrderDate(false);
+    setOrderRequests(false);
+  };
+
+  const clearFilterButton = () => {
+    if (isFilterAv || isFilterUn || searchTxt || orderDate || orderRequests) {
+      return (
+        <Button
+          variant="danger"
+          className="border-0 mx-3"
+          onClick={() => handleClearButton()}
+        >
+          Limpar
+        </Button>
+      );
+    }
+  };
+
   useEffect(() => {
-    makeCongregacoesOptions();
-  }, []);
+    isAuth && isAdmin && makeCongregacoesOptions();
+    isAuth && !isAdmin && getCongregationIdNow();
+  }, [isAuth]);
+
+  const searchAdv = (text) => {
+    console.log(text);
+    console.log(listaTerritorios);
+    if (!text) return listaTerritorios; // Se o texto for vazio, retorna a lista completa
+    const resultado = listaTerritorios.filter(
+      (item) => item.description.toLowerCase().includes(text.toLowerCase()) // Ignora maiúsculas e minúsculas
+    );
+    setCollectionSearch(resultado);
+  };
 
   return (
     <>
       <Container className="my-3 text-center">
         <Form.Control
           type="search"
+          disabled={!congregacaoSelected}
           placeholder="Pesquisar"
           aria-label="Pesquisar"
           value={searchTxt}
           onChange={(e) => {
             setSearchTxt(e.target.value);
+            searchAdv(e.target.value);
           }}
         />
 
@@ -76,7 +135,7 @@ const ToolsBar = ({ create }) => {
         >
           <Button className="border-0 bg-gray-50 hover:bg-gray-50 active:bg-gray-50"></Button>
 
-          {!isAdmin() && (
+          {!isAdmin && (
             <Button
               variant="light"
               title="Adicionar Território"
@@ -87,10 +146,14 @@ const ToolsBar = ({ create }) => {
             </Button>
           )}
 
-          {isAdmin() && (
-            <Form.Select className="border-0 bg-gray-50" size="sm" onChange={(e) => {
-              setCongregacaoSelected(e.target.value);
-            }}>
+          {isAdmin && (
+            <Form.Select
+              className="border-0 bg-gray-50"
+              size="sm"
+              onChange={(e) => {
+                setCongregacaoSelected(e.target.value);
+              }}
+            >
               <option value="">Seleciona uma congregação</option>
               {congregacoesOptions}
             </Form.Select>
@@ -107,7 +170,7 @@ const ToolsBar = ({ create }) => {
               eventKey="1"
               onClick={() => {
                 setIsFilterAv(false);
-                setIsFilterAn(false);
+                setIsFilterUn(false);
               }}
             >
               Todos
@@ -117,7 +180,7 @@ const ToolsBar = ({ create }) => {
               active={isFilterAv}
               onClick={() => {
                 setIsFilterAv(true);
-                setIsFilterAn(false);
+                setIsFilterUn(false);
               }}
             >
               Disponivel
@@ -126,7 +189,7 @@ const ToolsBar = ({ create }) => {
               eventKey="3"
               active={isFilterUn}
               onClick={() => {
-                setIsFilterAn(true);
+                setIsFilterUn(true);
                 setIsFilterAv(false);
               }}
             >
@@ -175,7 +238,7 @@ const ToolsBar = ({ create }) => {
             </Dropdown.Item>
           </DropdownButton>
 
-          {orderDate || orderRequests ? (
+          {orderDate || orderRequests || orderDescription ? (
             <Button
               variant="light"
               className="border-0 text-black"
@@ -202,8 +265,7 @@ const ToolsBar = ({ create }) => {
             /
             <Form.Check
               type="switch"
-              className="py-2 border-0 bg-gray-50 hidden hover:bg-gray-300"
-              defaultChecked={viewMode}
+              className="hidden "
               checked={viewMode}
               onChange={() => {
                 viewMode ? setViewMode(false) : setViewMode(true);
@@ -221,17 +283,23 @@ const ToolsBar = ({ create }) => {
 
           <Button className="border-0 bg-gray-50 hover:bg-gray-50"></Button>
         </ButtonGroup>
+
+        {clearFilterButton()}
       </Container>
 
-      <Bandeja
+      {/* <Bandeja
+        collectionSearch={collectionSearch}
         viewGrid={viewMode}
         filter={[isFilterAv, isFilterUn]}
         searching={searchTxt}
         setTag={setSearchTxt}
-        isOrdered={orderDate ? "createdAt" : orderRequests ? "requests" : false}
+        isOrdered={
+          orderDate ? "createdAt" : orderRequests ? "requests" : "description"
+        }
         orderDir={orderAsc ? "asc" : "desc"}
         congregacaoId={congregacaoSelected}
-      />
+        setListaTerritorios={setListaTerritorios}
+      />  */}
     </>
   );
 };

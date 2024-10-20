@@ -32,8 +32,8 @@ const Register = () => {
   const { createUser, error: authError, loading } = useAuthentication();
   const {
     getDocWhere,
-    error: dataError,
-    loading: dataLoading,
+    // error: dataError,
+    // loading: dataLoading,
   } = useFirestore();
 
   useEffect(() => {
@@ -47,7 +47,7 @@ const Register = () => {
     //   loadingScreen.classList.add("d-none");
     //   loadingScreen.classList.remove("loading");
     // }
-  }, []);
+  }, [authError]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -66,7 +66,6 @@ const Register = () => {
 
     if (isCongragationEmail) {
       setError("Este email já está a ser usado ");
-      console.log("Este email já está a ser usado ");
 
       setRegisterLoading(false);
       return;
@@ -77,8 +76,7 @@ const Register = () => {
     if (regMode) {
       if (password !== passwordConfirm) {
         setError("Confirme a sua palavra passe corretamente!");
-        console.log("Confirme a sua palavra passe corretamente!");
-        
+
         setRegisterLoading(false);
 
         return;
@@ -91,7 +89,6 @@ const Register = () => {
 
     if (accessConde !== accessCondeConfim) {
       setError("Confirme o codigo de acesso!");
-      console.log("Confirme o codigo de acesso!");
 
       setRegisterLoading(false);
       return;
@@ -107,7 +104,6 @@ const Register = () => {
 
     if (isCongragationName) {
       setError("Já existe uma congregação com este nome");
-      console.log("Já existe uma congregação com este nome");
 
       setRegisterLoading(false);
       return;
@@ -125,7 +121,7 @@ const Register = () => {
     };
 
     // --------- ---------- Criar congregação
-    const res = await createUser(congregacaoUser);
+    await createUser(congregacaoUser);
 
     setRegisterLoading(false);
     // console.log(res);

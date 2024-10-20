@@ -1,14 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { onAuthStateChanged } from "firebase/auth";
-import { Spinner } from "react-bootstrap";
 
 // hooks
 import { useState, useEffect } from "react";
-import { useAuthentication } from "./hooks/useAuthentication";
-import { useSessionStorage } from "./hooks/useSessionStorage";
+import { useFirestore } from "./hooks/useFirestore";
 
 // context
-import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from "./contexts/AuthContext";
+import { useTheme } from "./contexts/ThemeContext";
 
 // components
 import NavBar from "./components/NavBar/NavBar";
@@ -20,94 +18,67 @@ import Register from "./pages/Register/Register";
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
 import Congregacoes from "./pages/Congregacoes/Congregacoes";
-import { useFirestore } from "./hooks/useFirestore";
+import { useSessionStorage } from "./hooks/useSessionStorage";
 
 const App = () => {
-  const [user, setUser] = useState(undefined);
-  const [isAdmin, setIsAdmin] = useState(true);
-
-  const { auth } = useAuthentication();
-
-  const { getCollection } = useFirestore();
-  const loadingUser = user === undefined;
-
-  const isAdminNow = async () => {
-    const adminList = await getCollection("admins").then((res) => {
-      return res[0].list;
-    });
-
-    checkAdmInList(adminList);
-
-    function checkAdmInList(list) {
-      list.forEach((adm) => {
-        if (adm == user?.displayName) setIsAdmin(true);
-      });
-    }
-  };
+  const { isAuth, isAdmin, logout } = useAuth();
+  const { getUser } = useSessionStorage();
+  const { backColor, textColor } = useTheme();
 
   useEffect(() => {
-    onAuthStateChanged(auth, async (user) => {
-      setUser(user);
-      // console.log(user.displayName);
-      await isAdminNow();
-    });
-  }, [auth]);
-
-  if (loadingUser) {
-    return <p>Carregando...</p>;
-  }
+    console.log(isAdmin, isAuth);
+  }, [getUser(), isAuth]);
 
   return (
     <>
-      <AuthProvider value={{ user }}>
-        <BrowserRouter>
-          <div className="bg-gray m-0 p-0 h-auto">
-            <NavBar />
-            <div className="contentor">
-              <Routes>
-                <Route
-                  path="/"
-                  element={user ? <Home /> : <Navigate to="/login" />}
-                />
-                <Route path="/about" element={<About />} />
-                <Route
-                  path="/login"
-                  element={!user ? <Login /> : <Navigate to="/" />}
-                />
-                <Route
-                  path="/register"
-                  element={
-                    user ? (
-                      isAdmin ? (
-                        <Register />
-                      ) : (
-                        <Navigate to="/" />
-                      )
+      <BrowserRouter>
+        <div className={backColor + "m-0 p-0 h-screen"}>
+          <NavBar />
+          <div className={textColor}>
+            <Routes className="">
+              <Route path="/about" element={<About />} />
+              <Route
+                path="/"
+                element={isAuth ? <Home /> : <Navigate to="/login" />}
+              />
+
+              <Route
+                path="/login"
+                element={!isAuth ? <Login /> : <Navigate to="/" />}
+              />
+              <Route
+                path="/register"
+                element={
+                  isAuth ? (
+                    isAdmin ? (
+                      <Register />
                     ) : (
-                      <Navigate to="/login" />
+                      <Navigate to="/" />
                     )
-                  }
-                />
-                <Route
-                  path="/congregacoes"
-                  element={
-                    user ? (
-                      isAdmin ? (
-                        <Congregacoes />
-                      ) : (
-                        <Navigate to="/" />
-                      )
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+              <Route
+                path="/congregacoes"
+                element={
+                  isAuth ? (
+                    isAdmin ? (
+                      <Congregacoes />
                     ) : (
-                      <Navigate to="/login" />
+                      <Navigate to="/" />
                     )
-                  }
-                />
-              </Routes>
-            </div>
-            <Footer />
+                  ) : (
+                    <Navigate to="/login" />
+                  )
+                }
+              />
+            </Routes>
+            {/* <Footer /> */}
           </div>
-        </BrowserRouter>
-      </AuthProvider>
+        </div>
+      </BrowserRouter>
     </>
   );
 };

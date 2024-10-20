@@ -6,9 +6,14 @@ import {
   Card,
   Row,
   Col,
+  Form,
+  Image,
 } from "react-bootstrap";
 import { NavLink, Navigate } from "react-router-dom";
 import { BsQrCodeScan } from "react-icons/bs";
+import imagelogo from "../../assets/images/mylogo.png";
+import { MdWbSunny } from "react-icons/md";
+import { GoMoon } from "react-icons/go";
 
 // hooks
 import { useEffect, useState } from "react";
@@ -17,58 +22,52 @@ import { useFirestore } from "../../hooks/useFirestore";
 import { useSessionStorage } from "../../hooks/useSessionStorage";
 
 // context
-import { useAuthValue } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 // container
 import QReader from "../../containers/QReader/QReader";
+import { ThemeModeSwitch, toCaptalizer } from "../shared";
 
 //"font-size:2.3rem; padding: 0px 8px 0px 8px; background-color:#4A6DA7;"
 const NavBar = () => {
   const [show, setShow] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
   const [userNow, setUserNow] = useState("");
-  const [isAdmin, setIsAdmin] = useState(false);
 
-  const { user } = useAuthValue();
-  const { logout, loading: authLoading } = useAuthentication();
+  const [changeMode, setChangeMode] = useState(false);
+
+  const { currentUser: user, logout, isAdmin } = useAuth();
+  const { loading: authLoading } = useAuthentication();
   const { getDocWhere, getCollection, loading: dataLoading } = useFirestore();
+  const { theme, toggleTheme, navbar } = useTheme();
 
   const onDoubleClickHandler = () => {
     setShowMenu(true);
   };
 
   async function getCongregacaoNow() {
-    const cong = await getDocWhere("congregacoes", {
-      attr: "uid",
-      comp: "==",
-      value: user.uid,
+    const cong = await getDocWhere({
+      collect: "congregacoes",
+      whr: {
+        attr: "uid",
+        comp: "==",
+        value: user.uid,
+      },
     });
-    console.warn(cong);
     setUserNow(cong);
   }
 
   useEffect(() => {
     if (user) {
-      isAdminNow();
       if (!isAdmin) getCongregacaoNow();
     }
+
+    // reload when user changes
+    return () => {
+      setUserNow("");
+    };
   }, [user]);
-
-  const isAdminNow = async () => {
-    const adminList = await getCollection("admins").then((res) => {
-      return res[0].list;
-    });
-
-    checkAdmInList(adminList);
-
-    function checkAdmInList(list) {
-      list.forEach((adm) => {
-        if (adm.uid == user?.uid) {
-          setIsAdmin(true);
-        }
-      });
-    }
-  };
 
   if (authLoading || dataLoading) {
     return <p>Carregando...</p>;
@@ -76,56 +75,29 @@ const NavBar = () => {
 
   return (
     <>
-      <Navbar
-        expand="lg"
-        className="navbar-dark bg-dark p-0 justify-content-between"
-      >
+      <Navbar expand="lg" className={navbar + "p-0 justify-content-between"}>
         <Container fluid className="p-0">
           {
             /*Se não tiver usuario*/ !user && (
               <>
-                <NavLink
-                  to="/"
-                  style={{
-                    fontSize: "2.3rem",
-                    padding: "0px 8px",
-                    backgroundColor: "#4A6DA7",
-                  }}
-                  className="navlink"
-                >
-                  TC
+                <NavLink to="/">
+                  <Image disable src={imagelogo} alt="Logo" className="w-10" />
                 </NavLink>
               </>
             )
           }
-          {
-            /*Se tiver usuario*/ user && (
-              <>
-                <NavLink
-                  to="/"
-                  style={{
-                    fontSize: "2.3rem",
-                    padding: "0px 8px",
-                    backgroundColor: "#4A6DA7",
-                    borderRadius: "0px",
-                  }}
-                  className="navlink"
-                  onDoubleClick={onDoubleClickHandler}
-                >
-                  TC
-                </NavLink>
-              </>
-            )
-          }
-          <div className="d-flex align-items-center menu-items">
+          {user && (
+            <>
+              <NavLink to="/" onDoubleClick={onDoubleClickHandler}>
+                <Image disable src={imagelogo} alt="Logo" className="w-10" />
+              </NavLink>
+            </>
+          )}
+          <div className="flex align-items-center menu-items">
             {isAdmin && (
               <>
-                <NavLink to="/register" className="navlink">
-                  Registar
-                </NavLink>
-                <NavLink to="/congregacoes" className="navlink">
-                  Congregações
-                </NavLink>
+                <NavLink to="/register">Registar</NavLink>
+                <NavLink to="/congregacoes">Congregações</NavLink>
               </>
             )}
             {user && (
@@ -140,6 +112,14 @@ const NavBar = () => {
                   size={"1.8rem"}
                 />
               </a>
+            )}
+            {!user && (
+              <ThemeModeSwitch
+                theme={theme}
+                changeMode={changeMode}
+                setChangeMode={setChangeMode}
+                toggleTheme={toggleTheme}
+              />
             )}
           </div>
         </Container>
@@ -200,9 +180,9 @@ const NavBar = () => {
               {isAdmin && (
                 <Card>
                   <Row>
-                    <Col >
+                    <Col>
                       <strong>Cargo:</strong>
-                      <span> {'ADMINISTRADOR'}</span>
+                      <span> {"ADMINISTRADOR"}</span>
                     </Col>
                   </Row>
                   <Row>
@@ -220,6 +200,12 @@ const NavBar = () => {
               <Button variant="danger" onClick={logout}>
                 Sair
               </Button>
+              <ThemeModeSwitch
+                theme={theme}
+                changeMode={changeMode}
+                setChangeMode={setChangeMode}
+                toggleTheme={toggleTheme}
+              />
             </Modal.Body>
           </Modal>
         </>

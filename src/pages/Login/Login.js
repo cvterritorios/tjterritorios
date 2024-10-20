@@ -8,10 +8,13 @@ import {
   Alert,
 } from "react-bootstrap";
 
+// contxt
+import { useTheme } from "../../contexts/ThemeContext";
+
 //hooks
 import { useState, useEffect } from "react";
-import { useAuthentication } from "../../hooks/useAuthentication";
 import { useFirestore } from "../../hooks/useFirestore";
+import { useAuth } from "../../contexts/AuthContext";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -29,8 +32,11 @@ const Login = () => {
   const [congregacoesOptions, setCongregacoesOptions] = useState("");
   const [perfisOptions, setPerfisOptions] = useState("");
 
+  // context
+  const { login } = useAuth();
+  const { backSubColor, textColor, backForm } = useTheme();
+
   // my Hooks
-  const { login, error: authError, loading } = useAuthentication();
   const {
     getCollection,
     getDocWhere,
@@ -40,11 +46,11 @@ const Login = () => {
   } = useFirestore();
 
   useEffect(() => {
-    if (authError) setError(authError);
+    // if (authError) setError(authError);
     if (dataError) setError(dataError);
 
     makeCongregacoesOptions();
-  }, [authError, dataError]);
+  }, [dataError]);
 
   const makeCongregacoesOptions = async () => {
     const myList = await getCollection("congregacoes");
@@ -73,6 +79,7 @@ const Login = () => {
 
     if (logMode) {
       await login({ email, password, adm: true });
+      return;
     }
 
     const congregUser = {
@@ -82,15 +89,18 @@ const Login = () => {
     };
 
     //buscar congregação pelo codigo de acesso
-    const cong = await getDocWhere("congregacoes", {
-      attr: "accessCode",
-      comp: "==",
-      value: congregUser.accessCode,
+    const cong = await getDocWhere({
+      collect: "congregacoes",
+      whr: {
+        attr: "accessCode",
+        comp: "==",
+        value: congregUser.accessCode,
+      },
     });
 
     // Não encontrado
     if (!cong) {
-      console.log("Codigo de acesso incorreto!");
+      alert("Codigo de acesso incorreto!");
       return;
     }
 
@@ -121,8 +131,15 @@ const Login = () => {
       value: congregacaoUser.accessCode,
     };
 
-    const congregacaoToLog = await getDocWhere("congregacoes", where);
-    const congregacaoId = await getDocWhere("congregacoes", where, true);
+    const congregacaoToLog = await getDocWhere({
+      collect: "congregacoes",
+      whr: where,
+    });
+    const congregacaoId = await getDocWhere({
+      collect: "congregacoes",
+      whr: where,
+      id: true,
+    });
 
     congregacaoToLog.responsible.map((responsavel, idx) => {
       if (idx === perfil) {
@@ -134,7 +151,7 @@ const Login = () => {
 
     await updateDocument("congregacoes", congregacaoId, congregacaoToLog);
 
-    await login(congregacaoUser);
+    await login({ ...congregacaoUser });
   };
 
   const changeLogMod = () => {
@@ -147,16 +164,12 @@ const Login = () => {
     }
   };
 
-  if (dataLoading || loading) {
-    return <p>Carregando...</p>;
-  }
-
   return (
     <Container
       className="d-flex align-items-center justify-content-center"
       style={{ height: "90vh" }}
     >
-      <Card style={{ width: "25rem" }}>
+      <Card className={backSubColor + textColor} style={{ width: "25rem" }}>
         <Card.Header className="text-center">
           <CardTitle className="position-relative p-0">
             <strong>{!logMode ? "Entrar" : "Entrar ADM"}</strong>
@@ -164,7 +177,7 @@ const Login = () => {
               type="switch"
               defaultChecked={logMode}
               id="custom-switch"
-              className="position-absolute top-0 end-0"
+              className={"position-absolute top-0 end-0"}
               onChange={() => changeLogMod()}
             />
           </CardTitle>
@@ -178,6 +191,7 @@ const Login = () => {
                   <Form.Label>Email</Form.Label>
                   <Form.Control
                     required
+                    className={backForm}
                     type="email"
                     placeholder="Email"
                     defaultValue={email}
@@ -191,6 +205,7 @@ const Login = () => {
                   <Form.Label>Password</Form.Label>
                   <Form.Control
                     type="password"
+                    className={backForm}
                     required
                     placeholder="Password"
                     onChange={(e) => {
@@ -207,6 +222,7 @@ const Login = () => {
                   <Form.Select
                     aria-label="Congregação"
                     required
+                    className={backForm}
                     onChange={(e) => {
                       setEmail(e.target.value);
                     }}
@@ -220,7 +236,6 @@ const Login = () => {
                   <Form.Label>Password</Form.Label>
                   <Form.Control
                     type="password"
-                    placeholder="Password"
                     defaultValue={"!AlgoPraSaber"}
                   />
                 </Form.Group>
@@ -229,6 +244,9 @@ const Login = () => {
                   <Form.Label>Codigo de Acesso</Form.Label>
                   <Form.Control
                     required
+                    placeholder="Digite o código de acesso"
+                    className={backForm}
+                    type="password"
                     title="Digite o código de acesso"
                     defaultValue={accessCode}
                     onChange={(e) => {
@@ -239,16 +257,10 @@ const Login = () => {
               </>
             )}
 
-            {!loading && (
-              <Button variant="primary" className="w-100 mb-3" type="submit">
-                Enviar
-              </Button>
-            )}
-            {loading && (
-              <Button variant="primary" className="w-100 mb-3 disabled">
-                Aguarde...
-              </Button>
-            )}
+            <Button variant="primary" className="w-100 mb-3" type="submit">
+              Enviar
+            </Button>
+
             {error ? (
               <Alert variant="danger" onClose={() => setError("")} dismissible>
                 <p>{error}</p>

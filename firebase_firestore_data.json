@@ -1,0 +1,61 @@
+{
+  "territories": {
+    "cid": "id da congregacao",
+    "map": "link da imagem do mapa no storage",
+    "createdAt": "data de criação do territorio. Timestamp.now()",
+    "updatedAt": "data de atualizacao do territorio. Timestamp.now()",
+    "available": "estado de territorio. true",
+    "description": "Território N",
+    "observation": "Observação sobre o territorio",
+    "references": ["G Sao Joao", "Pelourinho"],
+    
+    "assignment": {
+      "date": "Timestamp.now()",
+      "publisher": {
+        "name": "nome do publicador",
+        "pid": "id do publicador"
+      },
+      "responsible": {
+        "name": "nome do responsavel pela atribuicao"
+      }
+    },
+    "requests": {
+      "date": ["Timestamp.now()"],
+      "current": 0,
+      "all": 0
+    }
+
+  },
+
+  "congregacoes": {
+    "id": "id da congregacao",
+    "name": "nome da congregacao",
+    "email": "email da congregacao",
+    "accessCode": "codigo de acesso da congregacao",
+    "responsible": [
+      {
+        "name": "nome do responsavel",
+        "isLoged": "",
+        "code": "Nã implementado ainda"
+      }
+    ],
+    "uid": "id de autenticação da congregação "
+  },
+
+  "publishers": {
+    "cid": "id da congregacao",
+    "firstname": "primeiro nome do publicador",
+    "lastname": "segundo nome do publicador",
+    "fullname": "Nome completo do publicador",
+    "tid": ["id do territorio"]
+  },
+
+  "admins": {
+    "list": [
+      {
+        "displayname": "nome do administrador",
+        "uid": "id de autenticação do administrador"
+      }
+    ]
+  }
+}

@@ -15,13 +15,9 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-.contentor {
-  min-height: 80vh;
-}
 
 .navlink {
   text-decoration: none;
-  color: whitesmoke;
 }
 
 #html5-qrcode-anchor-scan-type-change {
@@ -85,26 +81,6 @@ body {
 
 .menu-items > a {
   margin-left: 0.8rem;
-  color: #dadddf;
-}
-
-.menu-items > a:hover {
-  color: #fff;
-}
-
-.menu-items > a:active {
-  color: #8a8f93;
-}
-
-.loading {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(255, 255, 255, 1);
-  position: absolute;
-  width: 100%;
-  height: 100%;
-  top: 0px;
 }
 
 .picture {

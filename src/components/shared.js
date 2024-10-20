@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
+import { Button, Form, Spinner } from "react-bootstrap";
+import { GoMoon } from "react-icons/go";
+import { MdOutlineWbSunny } from "react-icons/md";
 
-const TimestampToDate = ({ time, style="" }) => {
+const TimestampToDate = ({ time, style = "" }) => {
   const [day, setDay] = useState("");
   const [mounth, setMounth] = useState("");
   const [year, setYear] = useState("");
@@ -57,11 +60,51 @@ const TimestampToDate = ({ time, style="" }) => {
     sliceDate(date);
   }, []);
 
+  return <span className={style}>{day + " de " + mounth + " de " + year}</span>;
+};
+
+const ButtonWithSpinner = ({
+  variant,
+  onClick = undefined,
+  type = "button",
+  animation = "border",
+  size = undefined,
+  value = false,
+}) => {
   return (
-    <span className={style}>
-      {day + " de " + mounth + " de " + year}
-    </span>
+    <Button variant={variant} onClick={onClick} type={type}>
+      <Spinner
+        className="mr-2"
+        as="span"
+        animation={animation}
+        size={size ? size : "sm"}
+        role="status"
+        aria-hidden="true"
+      />
+      {value || "Carregar..."}
+    </Button>
   );
 };
 
-export { TimestampToDate };
+export const toCaptalizer = (text) => {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+};
+
+const ThemeModeSwitch = ({ theme, changeMode, setChangeMode, toggleTheme }) => {
+  return (
+    <a className="flex space-x-3 items-center">
+      {theme === "dark" && <MdOutlineWbSunny size={22} />}
+      {theme === "light" && <GoMoon size={22} />}
+      <Form.Check
+        type="switch"
+        value={changeMode}
+        onChange={(e) => {
+          setChangeMode(e.target.checked);
+          toggleTheme();
+        }}
+      />
+    </a>
+  );
+};
+
+export { TimestampToDate, ButtonWithSpinner, ThemeModeSwitch };

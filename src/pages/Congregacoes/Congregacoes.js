@@ -32,7 +32,7 @@ const Congregacoes = () => {
   }, [errorData]);
 
   const handleDelete = (uid) => {
-    console.log(uid, "Has Deletedd");
+    alert(uid, "Has Deletedd");
   };
 
   const handleEdit = (uid) => {};

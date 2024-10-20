@@ -11,24 +11,33 @@ import {
   ButtonGroup,
 } from "react-bootstrap";
 import { MdAddCircleOutline } from "react-icons/md";
-import { useFirestore } from "../../hooks/useFirestore";
 import { ImCross } from "react-icons/im";
-import { GrStatusGood, GrStatusCritical } from "react-icons/gr";
 import {
   AssignmentInfo,
   AvailableStatus,
   BoxOfText,
   RefTags,
 } from "../../containers/Bandeja/shared";
-import { TimestampToDate } from "../shared";
+import { ButtonWithSpinner, TimestampToDate } from "../shared";
 
-const TerritoryModal = ({ title, type, territory = {} }) => {
+// hooks
+import { useSessionStorage } from "../../hooks/useSessionStorage";
+import { useFirestore } from "../../hooks/useFirestore";
+
+const TerritoryModal = ({
+  title,
+  type,
+  loading,
+  territory = {},
+  closeSelf = undefined,
+}) => {
+  const [congregacaoSelected, setCongregacaoSelected] = useState("");
   const [image, setImage] = useState(
     territory.id ? <Card.Img src={territory.map} /> : null
   );
   const [myFile, setMyFile] = useState("");
   const [description, setDescription] = useState(
-    territory.id ? territory.description : ""
+    territory.id ? territory.description : "Território "
   );
   const [referencias, setReferencias] = useState(
     territory.id ? territory.references : []
@@ -37,16 +46,30 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
     territory.id ? territory.observation : ""
   );
 
-  const { setTerritories, updateTerritories } = useFirestore();
+  const { setTerritories, updateTerritories, getDocWhere, deleteTerritory } =
+    useFirestore();
+  const { getUser } = useSessionStorage();
 
-  useEffect(() => {}, [referencias, image]);
+  const getCongregationIdNow = async () => {
+    const myCongregation = await getDocWhere("congregacoes", {
+      attr: "email",
+      comp: "==",
+      value: getUser().email,
+    });
+
+    setCongregacaoSelected(myCongregation.id);
+  };
+
+  useEffect(() => {
+    getCongregationIdNow();
+  }, [referencias, image]);
 
   const handleReference = () => {
     const text = document.getElementById("ref-input").value;
 
     // verifica se a caixa de texto está vazia
     if (text === "") {
-      console.log("Escreva uma referência");
+      alert("Escreva uma referência");
       return;
     }
 
@@ -68,8 +91,6 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
 
     // limpa o input
     document.getElementById("ref-input").value = "";
-
-    // console.log(referencias.includes(text));
   };
 
   const handlePreview = (file) => {
@@ -93,6 +114,7 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
       e.preventDefault();
 
       const territories = {
+        cid: congregacaoSelected,
         description: description, // to validate
         available: territory.id ? territory.available : true,
         observation: observation,
@@ -101,12 +123,12 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
 
       // if no description, map, or references, return
       if (!description || !referencias) {
-        console.log("Preencha todos os campos obrigatórios");
+        alert("Preencha todos os campos obrigatórios");
         return;
       }
 
       if (!territory.id && !myFile) {
-        console.log("Preencha todos os campos obrigatórios");
+        alert("Preencha todos os campos obrigatórios");
         return;
       }
 
@@ -199,8 +221,50 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
           </Modal.Body>
 
           <Modal.Footer>
+            {loading ? <ButtonWithSpinner variant={"primary"}  />
+:
             <Button variant="primary" type="submit">
               Enviar
+            </Button>}
+          </Modal.Footer>
+        </Form>
+      </>
+    );
+  };
+
+  const deleteContent = (territory = {}) => {
+    const handleSubmit = async (e) => {
+      e.preventDefault();
+
+      if (territory.id) {
+        // apagar o territorio
+        deleteTerritory(territory.id);
+      } else {
+        // não é possivel apagar o territorio
+        alert("Território inexistente");
+        return;
+      }
+    };
+
+    return (
+      <>
+        <Form onSubmit={handleSubmit}>
+          <Modal.Body>
+            <div className="m-0 fs-5">
+              Pretende realmente eliminar este território?
+            </div>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button variant="danger" type="submit">
+              Confirmar
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={() => closeSelf()}
+              className="ml-2"
+            >
+              Concelar
             </Button>
           </Modal.Footer>
         </Form>
@@ -216,19 +280,28 @@ const TerritoryModal = ({ title, type, territory = {} }) => {
 
       {type === "create" && insertContent()}
       {type === "update" && insertContent(territory)}
+      {type === "delete" && deleteContent(territory)}
     </>
   );
 };
 
 const MenuOpcoesModal = ({
-  id,
   description,
   available = false,
   closeSelf,
+  isAdmin,
   show_Read,
   show_Update,
   show_Delete,
 }) => {
+  const changeModal = (modal) => {
+    closeSelf();
+
+    setTimeout(() => {
+      modal();
+    }, 3000);
+  };
+
   return (
     <>
       <ButtonGroup vertical className="divide-y divide-gray-300 w-full ">
@@ -237,8 +310,9 @@ const MenuOpcoesModal = ({
         </Button>
 
         <Button
-          variant="light"
-          className="text-lg font-medium py-2"
+          variant={isAdmin ? "secondary" : "light"}
+          disabled={isAdmin}
+          className={`text-lg font-medium py-2`}
           onclick="se disponivel atribuir, se não desatribuir"
         >
           {available ? (
@@ -259,7 +333,8 @@ const MenuOpcoesModal = ({
         </Button>
 
         <Button
-          variant="light"
+          variant={isAdmin ? "secondary" : "light"}
+          disabled={isAdmin}
           className="text-lg font-medium py-2"
           onClick={() => {
             show_Update();
@@ -269,9 +344,12 @@ const MenuOpcoesModal = ({
         </Button>
 
         <Button
-          variant="light"
+          variant={isAdmin ? "secondary" : "light"}
+          disabled={isAdmin}
           className="text-lg font-medium py-2"
-          onclick="Abrir moda de delete"
+          onClick={() => {
+            show_Delete();
+          }}
         >
           Eliminar
         </Button>
@@ -384,7 +462,7 @@ const ViewImageModal = ({ image, closeSelf }) => {
     <>
       <Modal.Body className="relative">
         <Button
-        variant="transparent"
+          variant="transparent"
           className="text-white absolute end-7 top-7 cursor-pointer"
           onClick={closeSelf}
         >
