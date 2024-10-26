@@ -92,18 +92,17 @@ export const toCaptalizer = (text) => {
 
 const ThemeModeSwitch = ({ theme, changeMode, setChangeMode, toggleTheme }) => {
   return (
-    <a className="flex space-x-3 items-center">
-      {theme === "dark" && <MdOutlineWbSunny size={22} />}
+    <button
+      className={`flex space-x-3 items-center ${
+        theme === "light"
+          ? "bg-blue-900/75 hover:bg-blue-900 text-light"
+          : "bg-blue-300/75 hover:bg-blue-400 text-warning"
+      } p-1 rounded`}
+      onClick={() => toggleTheme()}
+    >
       {theme === "light" && <GoMoon size={22} />}
-      <Form.Check
-        type="switch"
-        value={changeMode}
-        onChange={(e) => {
-          setChangeMode(e.target.checked);
-          toggleTheme();
-        }}
-      />
-    </a>
+      {theme === "dark" && <MdOutlineWbSunny size={22} />}
+    </button>
   );
 };
 

@@ -18,21 +18,19 @@ import Register from "./pages/Register/Register";
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
 import Congregacoes from "./pages/Congregacoes/Congregacoes";
-import { useSessionStorage } from "./hooks/useSessionStorage";
+import { useLocalStorage } from "./hooks/useLocalStorage";
 
 const App = () => {
   const { isAuth, isAdmin, logout } = useAuth();
-  const { getUser } = useSessionStorage();
-  const { backColor, textColor } = useTheme();
+  const { getUser } = useLocalStorage();
+  const { backColor, textColor, theme } = useTheme();
 
-  useEffect(() => {
-    console.log(isAdmin, isAuth);
-  }, [getUser(), isAuth]);
+  useEffect(() => {}, [getUser(), isAuth]);
 
   return (
     <>
       <BrowserRouter>
-        <div className={backColor + "m-0 p-0 h-screen"}>
+        <div className={"m-0 p-0 h-full pb-10"}>
           <NavBar />
           <div className={textColor}>
             <Routes className="">
@@ -75,7 +73,11 @@ const App = () => {
                 }
               />
             </Routes>
-            {/* <Footer /> */}
+            {/*  <Footer
+              theme={{
+                background: theme === "dark" ? "bg-gray-900/50" : "bg-gray-100",
+              }}
+            /> */}
           </div>
         </div>
       </BrowserRouter>

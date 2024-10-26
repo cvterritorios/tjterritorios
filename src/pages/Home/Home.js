@@ -21,9 +21,6 @@ const Home = () => {
         setLoading={() => setLoading}
         setError={() => setError}
       />
-      {/* 
-
-      {""}
 
       <Modal
         size="sm"
@@ -33,8 +30,12 @@ const Home = () => {
         keyboard={false}
         centered
       >
-        <TerritoryModal title={"Novo Território"} type={"create"} loading={loading} />
-      </Modal> */}
+        <TerritoryModal
+          title={"Novo Território"}
+          type={"create"}
+          loading={loading}
+        />
+      </Modal>
     </>
   );
 };

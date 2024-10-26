@@ -17,9 +17,7 @@ import { GoMoon } from "react-icons/go";
 
 // hooks
 import { useEffect, useState } from "react";
-import { useAuthentication } from "../../hooks/useAuthentication";
 import { useFirestore } from "../../hooks/useFirestore";
-import { useSessionStorage } from "../../hooks/useSessionStorage";
 
 // context
 import { useAuth } from "../../contexts/AuthContext";
@@ -28,50 +26,27 @@ import { useTheme } from "../../contexts/ThemeContext";
 // container
 import QReader from "../../containers/QReader/QReader";
 import { ThemeModeSwitch, toCaptalizer } from "../shared";
+import { BiLogOutCircle } from "react-icons/bi";
 
 //"font-size:2.3rem; padding: 0px 8px 0px 8px; background-color:#4A6DA7;"
 const NavBar = () => {
   const [show, setShow] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
-  const [userNow, setUserNow] = useState("");
 
   const [changeMode, setChangeMode] = useState(false);
 
-  const { currentUser: user, logout, isAdmin } = useAuth();
-  const { loading: authLoading } = useAuthentication();
-  const { getDocWhere, getCollection, loading: dataLoading } = useFirestore();
-  const { theme, toggleTheme, navbar } = useTheme();
+  const { currentUser: user, logout, isAdmin, responsible } = useAuth();
+
+  const { theme, toggleTheme, navbar, navbarText, navbarHover } = useTheme();
 
   const onDoubleClickHandler = () => {
     setShowMenu(true);
   };
 
-  async function getCongregacaoNow() {
-    const cong = await getDocWhere({
-      collect: "congregacoes",
-      whr: {
-        attr: "uid",
-        comp: "==",
-        value: user.uid,
-      },
-    });
-    setUserNow(cong);
-  }
-
   useEffect(() => {
-    if (user) {
-      if (!isAdmin) getCongregacaoNow();
-    }
-
     // reload when user changes
-    return () => {
-      setUserNow("");
-    };
+    return () => {};
   }, [user]);
-
-  if (authLoading || dataLoading) {
-    return <p>Carregando...</p>;
-  }
 
   return (
     <>
@@ -81,7 +56,7 @@ const NavBar = () => {
             /*Se não tiver usuario*/ !user && (
               <>
                 <NavLink to="/">
-                  <Image disable src={imagelogo} alt="Logo" className="w-10" />
+                  <Image src={imagelogo} alt="Logo" className="w-10 m-0 p-0" />
                 </NavLink>
               </>
             )
@@ -89,7 +64,7 @@ const NavBar = () => {
           {user && (
             <>
               <NavLink to="/" onDoubleClick={onDoubleClickHandler}>
-                <Image disable src={imagelogo} alt="Logo" className="w-10" />
+                <Image src={imagelogo} alt="Logo" className="w-10" />
               </NavLink>
             </>
           )}
@@ -103,11 +78,7 @@ const NavBar = () => {
             {user && (
               <a>
                 <BsQrCodeScan
-                  style={{
-                    color: "whitesmoke",
-                    margin: "8px",
-                    cursor: "pointer",
-                  }}
+                  className={`${navbarText} ${navbarHover} hover:cursor-pointer m-1`}
                   onClick={() => setShow(true)}
                   size={"1.8rem"}
                 />
@@ -150,30 +121,36 @@ const NavBar = () => {
             style={{ maxHeight: "100vh" }}
           >
             <Modal.Body>
-              <Modal.Title>Informações do perfil</Modal.Title>
+              <Modal.Title className="flex justify-between">
+                Informações do perfil{" "}
+                <span>
+                  <ThemeModeSwitch
+                    theme={theme}
+                    changeMode={changeMode}
+                    setChangeMode={setChangeMode}
+                    toggleTheme={toggleTheme}
+                  />
+                </span>
+              </Modal.Title>
               {!isAdmin && (
                 <Card>
-                  <Row>
-                    <Col xs={7} md={5}>
+                  <Card.Body className="flex flex-col justify-center items-center space-y-1">
+                    <div className="flex space-x-2">
                       <strong>Congregação:</strong>
-                      <span> {userNow?.name}</span>
-                    </Col>
-                    {userNow?.responsible &&
-                      userNow?.responsible.map((element, idx) =>
-                        element.isLoged ? (
-                          <Col xs={7} md={5} key={idx}>
-                            <strong>Responsavel:</strong>
-                            <span> {element.name}</span>
-                          </Col>
-                        ) : (
-                          ""
-                        )
-                      )}
-                  </Row>
-                  <div xs={12} md={8}>
-                    <strong>Email:</strong>
-                    <span> {userNow?.email}</span>
-                  </div>
+                      <span> {user.displayName}</span>
+                    </div>
+                    <div className="flex space-x-2">
+                      <strong>Responsável:</strong>
+                      <span> {responsible}</span>
+                    </div>
+
+                    <Row>
+                      <Col xs={12}>
+                        <strong>Email:</strong>
+                        <span> {user.email}</span>
+                      </Col>
+                    </Row>
+                  </Card.Body>
                 </Card>
               )}
 
@@ -197,15 +174,14 @@ const NavBar = () => {
                   </div>
                 </Card>
               )}
-              <Button variant="danger" onClick={logout}>
-                Sair
+              <Button
+                size="sm"
+                variant="danger"
+                onClick={logout}
+                className="flex items-center my-2"
+              >
+                <BiLogOutCircle size={15} className="mr-2" /> <span>Sair</span>
               </Button>
-              <ThemeModeSwitch
-                theme={theme}
-                changeMode={changeMode}
-                setChangeMode={setChangeMode}
-                toggleTheme={toggleTheme}
-              />
             </Modal.Body>
           </Modal>
         </>

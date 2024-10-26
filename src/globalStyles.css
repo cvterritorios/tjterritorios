@@ -104,3 +104,32 @@ body {
   max-width: 100%;
   max-height: 100%;
 }
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  height: 5px; /* altura da barra de rolagem */
+  width: 5px; /* Largura da barra de rolagem */
+}
+
+.custom-scrollbar-hidden::-webkit-scrollbar {
+  height: 0px; /* altura da barra de rolagem */
+  width: 0px; /* Largura da barra de rolagem */
+}
+
+.custom-scrollbar.none-bar::-webkit-scrollbar {
+  width: 1px; /* Largura da barra de rolagem */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent; /* Cor de fundo do trilho da barra de rolagem */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #221f47; /* Cor da barra de rolagem */
+  border-radius: 20px; /* Arredondamento da barra */
+}
+
+.custom-scrollbar.none-bar::-webkit-scrollbar-thumb {
+  background-color: transparent; /* Cor da barra de rolagem */
+  border-radius: 20px; /* Arredondamento da barra */
+}

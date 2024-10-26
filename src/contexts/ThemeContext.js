@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 // Criação do contexto
 const ThemeContext = createContext({
@@ -7,8 +8,12 @@ const ThemeContext = createContext({
   backColor: "",
   backSubColor: "",
   backForm: "",
+  cardColor: "",
   navbar: "",
+  navbarText: "",
+  navbarHover: "",
   textColor: "",
+  textHover: "",
 });
 
 export const useTheme = () => {
@@ -16,34 +21,66 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState("light");
+  const { getThemeFromStorage, setThemeInStorage } = useLocalStorage();
+
+  const htmlTag = document.querySelector("html");
+
+  htmlTag.setAttribute("data-bs-theme", getThemeFromStorage() || "light");
+
+  const [theme, setTheme] = useState(getThemeFromStorage() || "light");
   const [backColor, setBackColor] = useState("");
   const [navbar, setNavbar] = useState("");
+  const [navbarText, setNavbarText] = useState("");
+  const [navbarHover, setNavbarHover] = useState("");
   const [backSubColor, setBackSubColor] = useState("");
   const [textColor, setTextColor] = useState("");
+  const [textHover, setTextHover] = useState("");
   const [backForm, setBackForm] = useState("");
+  const [cardColor, setCardColor] = useState("");
 
   const toggleTheme = () => {
     if (theme === "light") {
       setTheme("dark");
+      setThemeInStorage("dark");
+      htmlTag.setAttribute("data-bs-theme", "dark");
     } else {
       setTheme("light");
+      setThemeInStorage("light");
+      htmlTag.setAttribute("data-bs-theme", "light");
     }
   };
 
   const fillMode = (mode) => {
     if (mode === "dark") {
+      // Background
       setBackColor("bg-gray-800 ");
       setBackSubColor("bg-gray-500 ");
-      setNavbar("navbar-dark bg-gray-600 ");
+      //Navbar
+      setNavbar("navbar-dark bg-gray-700 ");
+      setNavbarText("text-gray-300");
+      setNavbarHover("hover:text-slate-400");
+      // Text
       setTextColor("text-slate-300");
+      setTextHover("hover:text-slate-300");
+      // Form
       setBackForm("bg-gray-300 focus:bg-gray-300/60 ");
+      // Card
+      setCardColor("bg-gray-700");
     } else if (mode === "light") {
+      // Background
       setBackColor("bg-bg-gray-200 ");
       setBackSubColor("bg-gray-300/20 ");
+      // Navbar
       setNavbar("navbar-light bg-gray-300 ");
+      setNavbarText("text-gray-900");
+      setNavbarHover("hover:text-slate-700");
+      // Text
       setTextColor("text-slate-900");
+      setTextHover("hover:text-slate-900");
+      // Form
       setBackForm("bg-white ");
+      // Card
+      setCardColor("bg-gray-100");
     }
   };
 
@@ -57,10 +94,14 @@ export const ThemeProvider = ({ children }) => {
         theme,
         toggleTheme,
         navbar,
+        navbarText,
+        navbarHover,
         backColor,
         backSubColor,
         textColor,
+        textHover,
         backForm,
+        cardColor,
       }}
     >
       {children}

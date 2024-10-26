@@ -7,7 +7,7 @@ import {
 } from "react-icons/gr";
 import { RxCrossCircled } from "react-icons/rx";
 
-const RefTags = ({ item, setTag, setSearchTag, noCliquable = false }) => {
+const RefTags = ({ item, setTag, setSearchFunction, noCliquable = false }) => {
   return (
     <>
       {item.references.map((ref, idx) => (
@@ -15,7 +15,7 @@ const RefTags = ({ item, setTag, setSearchTag, noCliquable = false }) => {
           key={idx}
           bg="bg-gray"
           text="dark"
-          className={`border bg-gray-300 w-fit m-1 truncate ${
+          className={`border bg-gray-300 w-fit m-1 ${
             noCliquable ? "" : "hover:cursor-pointer"
           }`}
           title={ref}
@@ -24,7 +24,7 @@ const RefTags = ({ item, setTag, setSearchTag, noCliquable = false }) => {
               ? undefined
               : () => {
                   setTag(ref);
-                  setSearchTag(true);
+                  setSearchFunction(ref, true);
                 }
           }
         >
@@ -73,7 +73,7 @@ const AvailableStatus = ({ item = {}, value = false, isPaint = false }) => {
                 </span>
               ) : (
                 <span
-                  className={`text-danger flex items-center ${
+                  className={`text-danger flex items-center  ${
                     isPaint ? "bg-red-50" : ""
                   } `}
                 >
@@ -93,8 +93,9 @@ const CardsGrid = ({
   handleShowOpcoesModal,
   setTerritoryNowData,
   setTag,
-  setSearchTag,
+  setSearchFunction,
   noCliquable = false,
+  background,
 }) => {
   const handleClick = (item) => {
     setTerritoryNowData({
@@ -103,7 +104,9 @@ const CardsGrid = ({
     handleShowOpcoesModal();
   };
   return (
-    <Card className="border rounded w-[10rem] md:w-[20rem] md:h-[20rem]">
+    <Card
+      className={`border rounded w-[10rem] md:w-[20rem] md:h-[20rem] ${background}`}
+    >
       <Card.Body className="text-center h-full">
         <Row className="h-1/2 ">
           <Card.Img
@@ -134,15 +137,13 @@ const CardsGrid = ({
             <RefTags
               item={item}
               setTag={setTag}
-              setSearchTag={setSearchTag}
+              setSearchFunction={setSearchFunction}
               noCliquable={noCliquable}
             />
-
           </Row>
-          
         </div>
-        
-        {BoxOfText({text: item.observation, title: "Observação" })}
+
+        {BoxOfText({ text: item.observation, title: "Observação" })}
       </Card.Body>
     </Card>
   );
@@ -153,8 +154,9 @@ const CardsList = ({
   handleShowOpcoesModal,
   setTerritoryNowData,
   setTag,
-  setSearchTag,
+  setSearchFunction,
   noCliquable = false,
+  background,
 }) => {
   const handleClick = (item) => {
     setTerritoryNowData({
@@ -164,9 +166,11 @@ const CardsList = ({
   };
 
   return (
-    <Card className="border border-end-0 border-start-0 rounded-0 md:w-[25rem] w-[23.4rem] h-[6rem]">
-      <Card.Body className="text-center ">
-        <Row className="">
+    <Card
+      className={`border border-end-0 border-start-0 rounded-0 md:w-[25rem] w-[23.4rem] h-[6rem] ${background}`}
+    >
+      <Card.Body className="text-center">
+        <Row className="relative">
           <Col xs={3} className="p-0 h-full">
             <Card.Img
               className="h-16 w-full hover:cursor-pointer"
@@ -177,8 +181,8 @@ const CardsList = ({
               src={item.map}
             ></Card.Img>
           </Col>
-          <Col className="px-1">
-            <Row className="justify-between flex">
+          <Col className="px-1 absolute start-[6.2rem]">
+            <Row className="justify-between flex w-4/5 ">
               <Col
                 className="font-bold text-base text-start ml-2 hover:cursor-pointer"
                 name="Description"
@@ -188,19 +192,24 @@ const CardsList = ({
               >
                 {item.description}
               </Col>
-              <Col className="" name="availeble">
-                <div className="text-end text-base">
+              <Col className="flex justify-end" name="availeble">
+                <div className="text-base">
                   <AvailableStatus item={item} />
                 </div>
               </Col>
             </Row>
-            <Row className="w-full flex m-2" name="references">
-              <RefTags
-                item={item}
-                setTag={setTag}
-                setSearchTag={setSearchTag}
-                noCliquable={noCliquable}
-              />
+            <Row className="w-full ">
+              <div
+                className="w-9/12 flex flex-row m-2 custom-scrollbar-hidden overflow-x-auto whitespace-nowrap"
+                name="references"
+              >
+                <RefTags
+                  item={item}
+                  setTag={setTag}
+                  setSearchFunction={setSearchFunction}
+                  noCliquable={noCliquable}
+                />
+              </div>
             </Row>
           </Col>
         </Row>
@@ -213,9 +222,9 @@ const BoxOfText = ({ text = "", component = null, title }) => {
   const format =
     "border bg-gray-100 my-2 border-black w-full rounded pt-2.5 p-2 text-xs ";
 
-    if(!text){
-      return <div className="w-full h-16 pt-3"> - Sem {title} - </div>
-    }
+  if (!text) {
+    return <div className="w-full h-16 pt-3"> - Sem {title} - </div>;
+  }
 
   return (
     <div className="relative border-2 border-transparent w-full ">

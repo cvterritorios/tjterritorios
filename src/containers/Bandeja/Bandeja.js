@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Container, Card, Row, Col, Badge, Modal } from "react-bootstrap";
 import { useFirestore } from "../../hooks/useFirestore";
-import { useSessionStorage } from "../../hooks/useSessionStorage";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 import {
   DetailsModal,
@@ -11,23 +11,21 @@ import {
 } from "../../components/Modal/Modal";
 import { AvailableStatus, CardsGrid, CardsList, RefTags } from "./shared";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const Bandeja = ({
-  collectionSearch,
+  territoryCollection,
   viewGrid,
-  filter = [],
   searching,
   setTag,
+  setSearchFunction,
   isOrdered,
   orderDir,
   congregacaoId = false,
-  setListaTerritorios,
 }) => {
   const [collection, setCollection] = useState([]);
   const [territoryNowData, setTerritoryNowData] = useState({});
 
-  const [searchTag, setSearchTag] = useState(false);
-  const [myOrderBy, setMyOrderBy] = useState({});
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
@@ -42,101 +40,66 @@ const Bandeja = ({
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const {
-    getTerritories,
-    getTerritoriesWhere,
-    error: dataError,
-    loading: dataLoading,
-  } = useFirestore();
   const { isAdmin } = useAuth();
+  const { theme, cardColor } = useTheme();
 
-  const startBandeja = async () => {
-    setLoading(true);
 
-    setMyOrderBy({ attr: isOrdered, dir: orderDir });
 
-    function checkCongToAdmin() {
-      if (isAdmin && !congregacaoId) {
-        alert("Você precisa selecionar uma congregação");
-        return true;
-      }
-      return false;
-    }
-
-    if (searchTag) {
-      const where = {
-        attr: "references",
-        comp: "array-contains",
-        value: searching,
-      };
-      const order = { attr: isOrdered, dir: orderDir };
-
-      const collsT = await getTerritoriesWhere({
-        whr: where,
-        congregacaoId: congregacaoId,
-        isAdmin: isAdmin,
-        ord: order,
-      });
-
-      setCollection(collsT);
-      setLoading(false);
-      return;
-    }
-
-    if (filter[0] && !checkCongToAdmin()) {
-      const where = {
-        attr: "available",
-        comp: "==",
-        value: true,
-      };
-
-      const order = { attr: isOrdered, dir: orderDir };
-
-      const coll = await getTerritoriesWhere({
-        whr: where,
-        congregacaoId: congregacaoId,
-        isAdmin: isAdmin,
-        ord: order,
-      });
-      setCollection(coll);
-    } else if (filter[1] && !checkCongToAdmin()) {
-      const where = {
-        attr: "available",
-        comp: "==",
-        value: false,
-      };
-      const order = { attr: isOrdered, dir: orderDir };
-
-      const coll = await getTerritoriesWhere({
-        whr: where,
-        congregacaoId: congregacaoId,
-        isAdmin: isAdmin,
-        ord: order,
-      });
-
-      setCollection(coll);
-    } else {
-      const coll = await getTerritories(
-        isOrdered && myOrderBy,
-        isAdmin,
-        congregacaoId
-      );
-      setCollection(coll);
-      setListaTerritorios(coll);
-    }
-
-    setLoading(false);
-  };
 
   useEffect(() => {
-    startBandeja();
+    territoryCollection.length > 0 && setCollection(territoryCollection);
 
-    if (error) setError(error);
-  }, [error, filter, searching, viewGrid, isOrdered, orderDir, congregacaoId]);
+    if (isOrdered === "createdAt") {
+      ordenarPorData();
+    } else if (isOrdered === "description") {
+      ordenarPorDescricao();
+    } else if (isOrdered === "requests") {
+      ordenarPorPedidos();
+    }
 
-  if (loading) {
-    <p>carregando..</p>;
-  }
+    error && setError(error);
+  }, [
+    error,
+    searching,
+    viewGrid,
+    isOrdered,
+    orderDir,
+    congregacaoId,
+    territoryCollection,
+  ]);
+
+  const ordenarPorData = () => {
+    const collectionOrdenada = [...collection].sort((a, b) => {
+      if (orderDir === "asc") {
+        return a.createdAt.toMillis() - b.createdAt.toMillis();
+      } else {
+        return b.createdAt.toMillis() - a.createdAt.toMillis();
+      }
+    });
+    setCollection(collectionOrdenada);
+  };
+
+  const ordenarPorDescricao = () => {
+    const collectionOrdenada = [...collection].sort((a, b) => {
+      if (orderDir === "asc") {
+        return a.description.localeCompare(b.description);
+      } else {
+        return b.description.localeCompare(a.description);
+      }
+    });
+    setCollection(collectionOrdenada);
+  };
+
+  const ordenarPorPedidos = () => {
+    const collectionOrdenada = [...collection].sort((a, b) => {
+      if (orderDir === "asc") {
+        return a.requests - b.requests;
+      } else {
+        return b.requests - a.requests;
+      }
+    });
+    setCollection(collectionOrdenada);
+  };
 
   const myModals = () => {
     return (
@@ -229,7 +192,7 @@ const Bandeja = ({
   return (
     <>
       <Container className="flex flex-wrap lg:justify-evenly justify-center ">
-        {collection.map((item, idx) => (
+        {collection?.map((item, idx) => (
           <div id={item.id} key={idx} className="m-1">
             {!viewGrid && (
               <CardsList
@@ -237,8 +200,9 @@ const Bandeja = ({
                 handleShowOpcoesModal={handleShowOpcoesModal}
                 setTerritoryNowData={setTerritoryNowData}
                 setTag={setTag}
-                setSearchTag={setSearchTag}
+                setSearchFunction={setSearchFunction}
                 noCliquable={!congregacaoId}
+                background={cardColor}
               />
             )}
             {viewGrid && (
@@ -247,12 +211,14 @@ const Bandeja = ({
                 handleShowOpcoesModal={handleShowOpcoesModal}
                 setTerritoryNowData={setTerritoryNowData}
                 setTag={setTag}
-                setSearchTag={setSearchTag}
+                setSearchFunction={setSearchFunction}
                 noCliquable={!congregacaoId}
+                background={cardColor}
               />
             )}
           </div>
         ))}
+        {!collection.length > 0 && <h1>Nenhum território encontrado</h1>}
       </Container>
       {showOpcoesModal && myModals()}
     </>

@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { auth } from "../services/firebase";
 import {
@@ -9,18 +8,19 @@ import {
   createUserWithEmailAndPassword,
 } from "firebase/auth";
 
-import { useSessionStorage } from "../hooks/useSessionStorage";
 import { MyAlert } from "../components/Alert/Alert";
 import { useFirestore } from "../hooks/useFirestore";
 import { useLoading } from "./LoadingContext";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 
 const AuthContext = createContext({
   currentUser: null,
-  login: async () => {},
-  signup: async () => {},
+  responsible: null,
+  congregation: null,
+  login: async ({ email, password }) => {},
+  signup: async ({ email, password, username }) => {},
   logout: async () => {},
   isAuth: false,
-  setIsAuth: () => {},
   isAdmin: false,
 });
 
@@ -29,129 +29,81 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const { startLoading, stopLoading } = useLoading();
   const {
     isAdmin: isAdminFromSession,
-    setUserInSession,
     removeUserInSession,
-  } = useSessionStorage();
-  const {
-    getDocId,
-    getDocWhere,
-    updateDocument,
-    setDocument,
-    error: dataError,
-  } = useFirestore();
+    getUser: getUserFromLocalStorage,
+  } = useLocalStorage();
+  const { getDocId } = useFirestore();
 
   const [currentUser, setCurrentUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [responsible, setResponsible] = useState(null);
+  const [congregation, setCongregation] = useState(null);
   const [isAuth, setIsAuth] = useState(false);
   const [isAdmin, setIsAdmin] = useState(!!isAdminFromSession());
-  const [userSession, setUserSession] = useState(null);
 
-  const login = async ({ email, password, accessCode, adm }) => {
-    startLoading();
+  const login = async ({ email, password }) => {
     try {
-      if (adm) {
-        setUserInSession({ type: "ADM", email, code: password });
-        await signInWithEmailAndPassword(auth, email, password);
-        return;
-      }
-
-      const where = { attr: "accessCode", comp: "==", value: accessCode };
-      const id = await getDocWhere({
-        collect: "congregacoes",
-        whr: where,
-        id: true,
-      });
-
-      if (!id) {
-        MyAlert({ variant: "danger", text: "Dados incorretos" });
-        stopLoading();
-        return;
-      }
-
-      setUserInSession({ type: "Congregacao", email, code: accessCode });
       await signInWithEmailAndPassword(auth, email, password);
+      return { ok: true };
     } catch (error) {
-      const systemErrorMessage = error.message.includes("wrong-password")
-        ? "Senha incorreta."
-        : "Ocorreu um erro, por favor tenta mais tarde.";
-      MyAlert({ variant: "danger", text: systemErrorMessage });
-    } finally {
-      stopLoading();
+      return { ok: false, message: error.message };
     }
   };
 
-  const signup = async ({
-    email,
-    password,
-    name,
-    accessCode,
-    responsible,
-    adm = false,
-  }) => {
-    startLoading();
+  async function signup({ email, password, username }) {
     try {
-      const { user } = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(user, { displayName: name });
+      // Criar o usuário no Firebase Authentication
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      const user = userCredential.user;
 
-      const newUserSession = {
-        email: user.email,
-        password: isAdminFromSession() ? accessCode : "!AlgoPraSaber",
-        accessCode: isAdminFromSession() ? null : accessCode,
-        adm: isAdminFromSession() ? true : null,
-      };
+      // Atualizar o perfil do usuário com o nome de usuário
+      await updateProfile(user, { displayName: username });
 
-      setUserSession(newUserSession);
-
-      if (adm) {
-        const adminsList = await getDocId("admins", "admins");
-        const newList = [
-          ...adminsList.list,
-          { displayName: name, uid: user.uid },
-        ];
-        await updateDocument("admins", "admins", { list: newList });
-      } else {
-        const congregacao = {
-          uid: user.uid,
-          name,
-          email,
-          accessCode,
-          responsible,
-        };
-        await setDocument("congregacoes", congregacao);
-      }
+      console.log("Usuário registrado com sucesso:", user);
+      return { ok: true, user: user };
     } catch (error) {
-      const systemErrorMessage = error.message.includes("email-already-in-use")
-        ? "E-mail já cadastrado."
-        : "Ocorreu um erro, por favor tenta mais tarde.";
-      MyAlert({ variant: "danger", text: systemErrorMessage });
-    } finally {
-      logout();
-      login(userSession);
-      stopLoading();
+      console.error("Erro ao registrar usuário:", error);
+      return { ok: false, message: error.message };
     }
-  };
+  }
 
   const logout = async () => {
-    startLoading();
     try {
       removeUserInSession();
       setIsAuth(false);
       setCurrentUser(null);
       await signOut(auth);
-    } finally {
-      stopLoading();
+    } catch (error) {
+      console.error("Erro ao deslogar usuário:", error);
     }
   };
+
+  async function getCongregationData(usr) {
+    const cong = await getDocId("congregacoes", usr.uid);
+    setCongregation({ ...cong, displayName: usr.displayName });
+  }
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setCurrentUser(user);
         setIsAuth(true);
-        setIsAdmin(!!isAdminFromSession());
+        const isAdminUser = isAdminFromSession();
+        setIsAdmin(isAdminUser);
+        if (!isAdminUser) {
+          if (!congregation) getCongregationData(user);
+
+          const userFromLocalStorage = getUserFromLocalStorage();
+
+          if (userFromLocalStorage) {
+            setResponsible(userFromLocalStorage.responsible);
+          }
+        }
       } else {
         setCurrentUser(null);
         setIsAuth(false);
@@ -160,21 +112,18 @@ export const AuthProvider = ({ children }) => {
     });
 
     return () => unsubscribe();
-  }, [auth, isAdminFromSession]);
+  }, [auth]);
 
   const value = {
     currentUser,
+    responsible,
     login,
     signup,
     logout,
+    congregation,
     isAuth,
-    setIsAuth,
     isAdmin,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

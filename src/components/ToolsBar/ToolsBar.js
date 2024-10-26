@@ -12,19 +12,29 @@ import {
   MdOutlineViewDay,
   MdOutlineViewArray,
 } from "react-icons/md";
-import { FaArrowDownShortWide, FaArrowDownWideShort } from "react-icons/fa6";
+import {
+  FaArrowDownShortWide,
+  FaArrowDownWideShort,
+  FaDeleteLeft,
+} from "react-icons/fa6";
 
 // hooks
-import { useSessionStorage } from "../../hooks/useSessionStorage";
 import { useFirestore } from "../../hooks/useFirestore";
 
 import Bandeja from "../../containers/Bandeja/Bandeja";
-import { useAuth } from "../../contexts/AuthContext";
 
-const ToolsBar = ({ create, setError, setLoading }) => {
+// contexts
+import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "../../contexts/ThemeContext";
+
+const ToolsBar = ({ create }) => {
   const [collectionSearch, setCollectionSearch] = useState([]);
 
   const [searchTxt, setSearchTxt] = useState("");
+  const [isSearching, setIsSearching] = useState(false);
+
+  const [isTagSearching, setIsTagSearching] = useState(false);
+
   const [viewMode, setViewMode] = useState(false);
   const [isFilterUn, setIsFilterUn] = useState(false);
   const [isFilterAv, setIsFilterAv] = useState(false);
@@ -32,7 +42,7 @@ const ToolsBar = ({ create, setError, setLoading }) => {
   // lista de territorios
   const [listaTerritorios, setListaTerritorios] = useState([]);
 
-  const [orderDescription, setOrderDescription] = useState(true);
+  const [orderDescription, setOrderDescription] = useState(false);
   const [orderDate, setOrderDate] = useState(false);
   const [orderRequests, setOrderRequests] = useState(false);
   const [orderAsc, setOrderAsc] = useState(true);
@@ -41,14 +51,20 @@ const ToolsBar = ({ create, setError, setLoading }) => {
   const [congregacaoSelected, setCongregacaoSelected] = useState("");
 
   const { isAdmin, currentUser: user, isAuth } = useAuth();
+
+  const { theme } = useTheme();
+
   const {
     getCollection,
     getDocWhere,
+    getTerritories,
     error: errorData,
     loading: loadingData,
   } = useFirestore();
 
   const makeCongregacoesOptions = async () => {
+    if (!isAdmin) return;
+
     const myList = await getCollection("congregacoes");
 
     const options = myList?.map((congregacao) => {
@@ -63,63 +79,154 @@ const ToolsBar = ({ create, setError, setLoading }) => {
     // console.log(myCon);
   };
 
-  const getCongregationIdNow = async () => {
-    const myCongregation = await getDocWhere({
-      collect: "congregacoes",
-      whr: {
-        attr: "email",
-        comp: "==",
-        value: user.email,
-      },
-    });
-
-    console.log(myCongregation);
-    // setCongregacaoSelected(myCongregation.id);
-  };
-
   const handleClearButton = () => {
-    setIsFilterAv(false);
-    setIsFilterUn(false);
+    handleFilter("all");
     setSearchTxt("");
     setOrderDate(false);
     setOrderRequests(false);
+    setOrderDescription(false);
+    setIsSearching(false);
+    setCollectionSearch([]);
   };
 
   const clearFilterButton = () => {
-    if (isFilterAv || isFilterUn || searchTxt || orderDate || orderRequests) {
+    if (
+      isFilterAv ||
+      isFilterUn ||
+      searchTxt ||
+      orderDate ||
+      orderRequests ||
+      orderDescription
+    ) {
       return (
         <Button
           variant="danger"
-          className="border-0 mx-3"
+          className="border-0"
           onClick={() => handleClearButton()}
         >
-          Limpar
+          <FaDeleteLeft size={20} title="Resetar filtros" />
         </Button>
       );
     }
   };
 
   useEffect(() => {
-    isAuth && isAdmin && makeCongregacoesOptions();
-    isAuth && !isAdmin && getCongregationIdNow();
-  }, [isAuth]);
+    if (isAuth && isAdmin) makeCongregacoesOptions();
+    if (isAuth && !isAdmin) setCongregacaoSelected(user.uid);
 
-  const searchAdv = (text) => {
-    console.log(text);
-    console.log(listaTerritorios);
-    if (!text) return listaTerritorios; // Se o texto for vazio, retorna a lista completa
-    const resultado = listaTerritorios.filter(
-      (item) => item.description.toLowerCase().includes(text.toLowerCase()) // Ignora maiúsculas e minúsculas
-    );
-    setCollectionSearch(resultado);
+    async function getTer() {
+      const imgs = [
+        "https://firebasestorage.googleapis.com/v0/b/tjterritorios.appspot.com/o/territorios%2F0eLvKAxYvJJcETV3mVEu%2Fmapa.png?alt=media&token=55b00322-aa8d-4834-bf40-43f33fe0d863",
+        "https://firebasestorage.googleapis.com/v0/b/tjterritorios.appspot.com/o/territorios%2FGgN2zBOUDkhVS3cF38cY%2Fmapa.png?alt=media&token=fbccc926-396b-41c6-a894-7cb4dfe9647c",
+      ];
+      const references = [
+        "G Sao Joao",
+        "Pelourinho",
+        "G Santo Antonio",
+        "G Sao Francisco",
+      ];
+
+      const lista = Array.from(
+        { length: 5 + Math.floor(Math.random() * 6) },
+        () => ({
+          requests: {
+            current: Math.floor(Math.random() * 10),
+            all: Math.floor(Math.random() * 100),
+          },
+          createdAt: new Date(
+            Date.now() - Math.floor(Math.random() * 7776000000)
+          ),
+          description: "Território N " + Math.floor(Math.random() * 100),
+          available: Math.random() < 0.5,
+          map: imgs[Math.floor(Math.random() * imgs.length)],
+          observation:
+            Math.random() < 0.5
+              ? ""
+              : `Observação aleatória ${Math.floor(Math.random() * 100)}`,
+          references: Array.from(
+            { length: Math.floor(Math.random() * 3) + 1 },
+            () => references[Math.floor(Math.random() * references.length)]
+          ),
+        })
+      );
+
+      /* await getTerritories({
+        congregacaoId: user.uid,
+        isAdmin: isAdmin,
+      });
+ */
+      setListaTerritorios(lista);
+    }
+
+    listaTerritorios.length < 1 && getTer();
+
+    return () => {};
+  }, [isAuth, listaTerritorios]);
+
+  const searchAdv = (text, tag = false) => {
+    if (!text) {
+      setIsSearching(false);
+      return setCollectionSearch([]);
+    }
+
+    if (tag) {
+      setIsSearching(true);
+      const resultado = listaTerritorios.filter((item) =>
+        item.references.includes(text)
+      );
+      setCollectionSearch(resultado);
+    } else {
+      setIsSearching(true);
+      const resultado = listaTerritorios.filter((item) =>
+        item.description.toLowerCase().includes(text.toLowerCase())
+      );
+      setCollectionSearch(resultado);
+    }
+
+  };
+
+  const handleFilter = (type, value) => {
+    if (type === "all") {
+      setIsFilterAv(false);
+      setIsFilterUn(false);
+      setCollectionSearch([]);
+      setIsSearching(false);
+    } else if (type === "available") {
+      console.log(collectionSearch);
+
+      if (value) {
+        setIsFilterAv(true);
+        setIsFilterUn(false);
+
+        const available = searchTxt
+          ? collectionSearch.filter((item) => item.available === true)
+          : listaTerritorios.filter((item) => item.available === true);
+
+        setIsSearching(true);
+
+        setCollectionSearch(available);
+      } else {
+        setIsFilterAv(false);
+        setIsFilterUn(true);
+
+        const unavailable = searchTxt
+          ? collectionSearch.filter((item) => item.available === false)
+          : listaTerritorios.filter((item) => item.available === false);
+
+        setIsSearching(true);
+
+        setCollectionSearch(unavailable);
+      }
+    }
   };
 
   return (
     <>
-      <Container className="my-3 text-center">
+      <Container className={"my-3 text-center "}>
         <Form.Control
           type="search"
-          disabled={!congregacaoSelected}
+          disabled={!!!congregacaoSelected}
+          className={theme === "dark" ? "bg-dark" : "bg-light"}
           placeholder="Pesquisar"
           aria-label="Pesquisar"
           value={searchTxt}
@@ -131,15 +238,19 @@ const ToolsBar = ({ create, setError, setLoading }) => {
 
         <ButtonGroup
           aria-label="toolsbar"
-          className="my-3 h-10 md:w-auto w-full border-2"
+          className={`my-3 h-10 md:w-auto w-full border-2 ${theme === "dark" ? "border-slate-700" : "border-slate-300"}`}
         >
-          <Button className="border-0 bg-gray-50 hover:bg-gray-50 active:bg-gray-50"></Button>
+          <Button
+            disabled
+            variant={theme === "light" ? "light" : "dark"}
+            className={`border-0 `}
+          ></Button>
 
           {!isAdmin && (
             <Button
-              variant="light"
               title="Adicionar Território"
-              className="border-0"
+              variant={theme === "light" ? "light" : "dark"}
+              className={`border-0 flex items-center justify-center`}
               onClick={create}
             >
               <MdAddCircleOutline size={24} />
@@ -148,7 +259,8 @@ const ToolsBar = ({ create, setError, setLoading }) => {
 
           {isAdmin && (
             <Form.Select
-              className="border-0 bg-gray-50"
+              variant={theme === "light" ? "light" : "dark"}
+              className="border-0"
               size="sm"
               onChange={(e) => {
                 setCongregacaoSelected(e.target.value);
@@ -160,17 +272,15 @@ const ToolsBar = ({ create, setError, setLoading }) => {
           )}
 
           <DropdownButton
-            variant="light"
+            variant={theme === "light" ? "light" : "dark"}
             as={ButtonGroup}
             title="Filtrar"
-            className="border-0"
-            id="dropdown-basic-button"
+            className={`border-0`}
           >
             <Dropdown.Item
               eventKey="1"
               onClick={() => {
-                setIsFilterAv(false);
-                setIsFilterUn(false);
+                handleFilter("all");
               }}
             >
               Todos
@@ -179,8 +289,7 @@ const ToolsBar = ({ create, setError, setLoading }) => {
               eventKey="2"
               active={isFilterAv}
               onClick={() => {
-                setIsFilterAv(true);
-                setIsFilterUn(false);
+                handleFilter("available", true);
               }}
             >
               Disponivel
@@ -189,8 +298,7 @@ const ToolsBar = ({ create, setError, setLoading }) => {
               eventKey="3"
               active={isFilterUn}
               onClick={() => {
-                setIsFilterUn(true);
-                setIsFilterAv(false);
+                handleFilter("available", false);
               }}
             >
               Indisponivel
@@ -198,9 +306,17 @@ const ToolsBar = ({ create, setError, setLoading }) => {
           </DropdownButton>
 
           <DropdownButton
-            variant={orderDate || orderRequests ? "info" : "light"}
+            variant={theme === "light" ? "light" : "dark"}
             as={ButtonGroup}
-            title={"Ordenar"}
+            title={
+              orderDate
+                ? "Por Data"
+                : orderRequests
+                ? "Por Pedidos"
+                : orderDescription
+                ? "Descrição"
+                : "Ordenar"
+            }
             className="border-0"
           >
             <Dropdown.Item
@@ -240,66 +356,74 @@ const ToolsBar = ({ create, setError, setLoading }) => {
 
           {orderDate || orderRequests || orderDescription ? (
             <Button
-              variant="light"
-              className="border-0 text-black"
+              variant={theme === "light" ? "light" : "dark"}
+              className="border-0"
               onClick={(e) => {
                 setOrderAsc(!orderAsc);
               }}
             >
-              {orderAsc && <FaArrowDownWideShort />}
-              {!orderAsc && <FaArrowDownShortWide />}
+              {!orderAsc && <FaArrowDownWideShort />}
+              {orderAsc && <FaArrowDownShortWide />}
             </Button>
           ) : (
             ""
           )}
 
-          <ButtonGroup className="items-center">
-            <MdOutlineViewDay
-              size={30}
-              className="text-light py-2 h-10 text-black border-0 bg-gray-50 hover:bg-gray-300"
-              title="Vista em lista"
-              onClick={() => {
-                setViewMode(false);
-              }}
-            />
-            /
-            <Form.Check
-              type="switch"
-              className="hidden "
-              checked={viewMode}
-              onChange={() => {
-                viewMode ? setViewMode(false) : setViewMode(true);
-              }}
-            />
-            <MdOutlineViewArray
-              size={30}
-              className="text-light py-2 h-10 text-black border-0 bg-gray-50 hover:bg-gray-300"
-              title="Vista em grade"
-              onClick={() => {
-                setViewMode(true);
-              }}
-            />
-          </ButtonGroup>
+          <Button
+            variant={theme === "light" ? "light" : "dark"}
+            className="border-0 flex items-center justify-center"
+          >
+            {viewMode && (
+              <MdOutlineViewDay
+                size={25}
+                className="border-0 "
+                title="Vista em lista"
+                onClick={() => {
+                  setViewMode(false);
+                }}
+              />
+            )}
+            {!viewMode && (
+              <MdOutlineViewArray
+                size={25}
+                className="border-0 "
+                title="Vista em grade"
+                onClick={() => {
+                  setViewMode(true);
+                }}
+              />
+            )}
+          </Button>
 
-          <Button className="border-0 bg-gray-50 hover:bg-gray-50"></Button>
+          <Button
+            variant={theme === "light" ? "light" : "dark"}
+            disabled
+            className="border-0"
+          ></Button>
+
+          {clearFilterButton()}
         </ButtonGroup>
-
-        {clearFilterButton()}
       </Container>
 
-      {/* <Bandeja
-        collectionSearch={collectionSearch}
+      <Bandeja
+        territoryCollection={isSearching ? collectionSearch : listaTerritorios}
         viewGrid={viewMode}
         filter={[isFilterAv, isFilterUn]}
         searching={searchTxt}
         setTag={setSearchTxt}
+        setSearchFunction={searchAdv}
         isOrdered={
-          orderDate ? "createdAt" : orderRequests ? "requests" : "description"
+          orderDate
+            ? "createdAt"
+            : orderRequests
+            ? "requests"
+            : orderDescription
+            ? "description"
+            : null
         }
         orderDir={orderAsc ? "asc" : "desc"}
         congregacaoId={congregacaoSelected}
-        setListaTerritorios={setListaTerritorios}
-      />  */}
+      />
     </>
   );
 };

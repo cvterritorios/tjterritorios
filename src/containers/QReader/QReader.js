@@ -2,7 +2,7 @@ import { Html5QrcodeScanner } from "html5-qrcode";
 import { useEffect, useState } from "react";
 import { Container, Modal } from "react-bootstrap";
 
-const QReader = () => {
+const QReader = ({close}) => {
   const [scanResult, setScanResult] = useState(null);
 
   useEffect(() => {

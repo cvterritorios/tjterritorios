@@ -12,17 +12,20 @@ import {
   deleteDoc,
   orderBy,
   Timestamp,
+  setDoc,
 } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 // hooks
 import { useState, useEffect } from "react";
+import { useAuth } from "../contexts/AuthContext";
 
 export const useFirestore = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
 
   const auth = getAuth();
+  const { currentUser: user } = useAuth();
   //cleanup
   const [cancelled, setCancelled] = useState(false);
 
@@ -64,7 +67,7 @@ export const useFirestore = () => {
         value: user.uid,
       });
 
-      return congregacaoLogged.id;
+      return user.uid;
     }
     return false;
   }
@@ -96,13 +99,28 @@ export const useFirestore = () => {
     validate("end");
   };
 
+  const setDocWithId = async ({ collect, id, data }) => {
+    validate("start");
+    let systemErrorMessage;
+
+    try {
+      const res = await setDoc(doc(db, collect, id), data);
+      return res;
+    } catch (error) {
+      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
+      setError(systemErrorMessage);
+    }
+    validate("end");
+  };
+
   const setTerritories = async (data = {}, file) => {
     const collect = "territorios";
     validate("start");
 
-    const cid = await nowCongregationId();
-
-    const res = await addDoc(collection(db, collect), { ...data, cid });
+    const res = await addDoc(collection(db, collect), {
+      ...data,
+      cid: user.uid,
+    });
 
     // upload do map em data para o storage
     const mapRef = ref(storage, `territorios/${res.id}/mapa.png`);
@@ -188,32 +206,22 @@ export const useFirestore = () => {
   // functions - gets
   const getDocId = async (collect, documentId) => {
     validate("start");
-    let systemErrorMessage;
-    try {
-      const docRef = doc(db, collect, documentId);
-      const docSnap = await getDoc(docRef);
 
-      if (docSnap.exists()) {
-        validate("end");
-        return docSnap.data();
-      } else {
-        systemErrorMessage = "Documento não encontrado.";
+    const docRef = doc(db, collect, documentId);
+    const docSnap = await getDoc(docRef);
 
-        setError(systemErrorMessage);
-      }
-    } catch (error) {
-      console.log(error.messeger);
-      console.log(typeof error.messeger);
-
-      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
-
-      setError(systemErrorMessage);
+    if (docSnap.exists()) {
+      validate("end");
+      return docSnap.data();
+    } else {
+      setError("Documento não encontrado.");
     }
+
     validate("end");
   };
 
   const getDocWhere = async ({
-    collect= "",
+    collect = "",
     whr = { attr: "", comp: "", value: "" },
     id = false,
   }) => {
@@ -254,26 +262,15 @@ export const useFirestore = () => {
   const getCollection = async (collect, ord = { attr: "", dir: "" }) => {
     validate("start");
 
-    try {
-      const q = query(
-        collection(db, collect),
-        ord.attr && orderBy(ord.attr, ord.dir)
-      );
+    const q = query(
+      collection(db, collect),
+      ord.attr && orderBy(ord.attr, ord.dir)
+    );
 
-      const res = await getDocsQuery(q);
+    const res = await getDocsQuery(q);
 
-      validate("end");
-      return res;
-    } catch (error) {
-      console.log(error.messeger);
-      console.log(typeof error.messeger);
-
-      let systemErrorMessage;
-      systemErrorMessage = "Ocorreu um erro, por favor tenta mais tarde.";
-
-      setError(systemErrorMessage);
-      validate("end");
-    }
+    validate("end");
+    return res;
   };
 
   const getCollectionWhere = async (
@@ -320,10 +317,7 @@ export const useFirestore = () => {
     validate("start");
 
     const collect = "territorios";
-    const cid =
-      congregacaoId !== undefined
-        ? congregacaoId
-        : await nowCongregationId(isAdmin);
+    const cid = congregacaoId !== undefined ? congregacaoId : user.uid;
 
     let q = undefined;
 
@@ -352,8 +346,7 @@ export const useFirestore = () => {
     validate("start");
 
     const collect = "territorios";
-    const cid =
-      congregacaoId !== "" ? congregacaoId : await nowCongregationId(isAdmin);
+    const cid = user.uid;
 
     // console.log(cid);
 
@@ -414,6 +407,7 @@ export const useFirestore = () => {
     loading,
     //sets
     setDocument,
+    setDocWithId,
     setTerritories,
     //functions - updates
     updateDocument,

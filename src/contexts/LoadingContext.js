@@ -3,7 +3,11 @@ import loadingImage from "../assets/gifs/loading.gif";
 // import loadingImageDark from "../assets/gifs/loading.gif";
 
 // Criação do contexto de loading
-const LoadingContext = createContext();
+const LoadingContext = createContext({
+  loading: false,
+  startLoading: () => {},
+  stopLoading: () => {},
+});
 
 export const useLoading = () => {
   return useContext(LoadingContext);
@@ -31,8 +35,7 @@ export const LoadingProvider = ({ children }) => {
 
   return (
     <LoadingContext.Provider value={{ loading, startLoading, stopLoading }}>
-      {!loading && children}
-      {loading && showLoadingImage()}
+      {!loading ? children : showLoadingImage()}
     </LoadingContext.Provider>
   );
 };

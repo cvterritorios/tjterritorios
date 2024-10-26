@@ -21,8 +21,9 @@ import {
 import { ButtonWithSpinner, TimestampToDate } from "../shared";
 
 // hooks
-import { useSessionStorage } from "../../hooks/useSessionStorage";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { useFirestore } from "../../hooks/useFirestore";
+import { useAuth } from "../../contexts/AuthContext";
 
 const TerritoryModal = ({
   title,
@@ -48,20 +49,11 @@ const TerritoryModal = ({
 
   const { setTerritories, updateTerritories, getDocWhere, deleteTerritory } =
     useFirestore();
-  const { getUser } = useSessionStorage();
-
-  const getCongregationIdNow = async () => {
-    const myCongregation = await getDocWhere("congregacoes", {
-      attr: "email",
-      comp: "==",
-      value: getUser().email,
-    });
-
-    setCongregacaoSelected(myCongregation.id);
-  };
+  const { getUser } = useLocalStorage();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    getCongregationIdNow();
+    setCongregacaoSelected(currentUser.uid);
   }, [referencias, image]);
 
   const handleReference = () => {
@@ -114,7 +106,6 @@ const TerritoryModal = ({
       e.preventDefault();
 
       const territories = {
-        cid: congregacaoSelected,
         description: description, // to validate
         available: territory.id ? territory.available : true,
         observation: observation,
@@ -135,7 +126,7 @@ const TerritoryModal = ({
       if (territory.id) {
         await updateTerritories(
           territory.id,
-          territories,
+          { ...territories, cid: congregacaoSelected },
           myFile ? myFile : null
         );
       } else {
@@ -221,11 +212,13 @@ const TerritoryModal = ({
           </Modal.Body>
 
           <Modal.Footer>
-            {loading ? <ButtonWithSpinner variant={"primary"}  />
-:
-            <Button variant="primary" type="submit">
-              Enviar
-            </Button>}
+            {loading ? (
+              <ButtonWithSpinner variant={"primary"} />
+            ) : (
+              <Button variant="primary" type="submit">
+                Enviar
+              </Button>
+            )}
           </Modal.Footer>
         </Form>
       </>
@@ -313,7 +306,7 @@ const MenuOpcoesModal = ({
           variant={isAdmin ? "secondary" : "light"}
           disabled={isAdmin}
           className={`text-lg font-medium py-2`}
-          onclick="se disponivel atribuir, se não desatribuir"
+          onClick={() => alert("se disponivel atribuir, se não desatribuir")}
         >
           {available ? (
             <span className="text-success">Atribuir</span>

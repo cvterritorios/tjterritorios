@@ -15,6 +15,8 @@ import { useTheme } from "../../contexts/ThemeContext";
 import { useState, useEffect } from "react";
 import { useFirestore } from "../../hooks/useFirestore";
 import { useAuth } from "../../contexts/AuthContext";
+import { useLoading } from "../../contexts/LoadingContext";
+import { useLocalStorage } from "../../hooks/useLocalStorage";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -25,7 +27,6 @@ const Login = () => {
   const [show, setShow] = useState(false);
   const [logMode, setLogMode] = useState(false);
 
-  const [congregacaoUser, setCongregacaoUser] = useState("");
   const [perfil, setPerfil] = useState("");
 
   // Options
@@ -35,22 +36,18 @@ const Login = () => {
   // context
   const { login } = useAuth();
   const { backSubColor, textColor, backForm } = useTheme();
+  const { startLoading, stopLoading } = useLoading();
 
   // my Hooks
-  const {
-    getCollection,
-    getDocWhere,
-    updateDocument,
-    error: dataError,
-    loading: dataLoading,
-  } = useFirestore();
+  const { getCollection, getDocWhere, error: dataError } = useFirestore();
+  const { setUserInSession, getUser } = useLocalStorage();
 
   useEffect(() => {
     // if (authError) setError(authError);
     if (dataError) setError(dataError);
 
-    makeCongregacoesOptions();
-  }, [dataError]);
+    !congregacoesOptions && !getUser() && makeCongregacoesOptions();
+  }, [dataError, show, congregacoesOptions]);
 
   const makeCongregacoesOptions = async () => {
     const myList = await getCollection("congregacoes");
@@ -72,21 +69,20 @@ const Login = () => {
 
     setError(null);
 
-    /* 
-    console.log(congregacaoUser, await congregacaoId);
-    return;
-    */
-
     if (logMode) {
-      await login({ email, password, adm: true });
+      startLoading();
+      const res = await login({ email, password });
+
+      if (res.ok) {
+        setUserInSession({
+          type: "ADM",
+          email: email,
+          code: password,
+        });
+      }
+      stopLoading();
       return;
     }
-
-    const congregUser = {
-      email,
-      password,
-      accessCode,
-    };
 
     //buscar congregação pelo codigo de acesso
     const cong = await getDocWhere({
@@ -94,64 +90,50 @@ const Login = () => {
       whr: {
         attr: "accessCode",
         comp: "==",
-        value: congregUser.accessCode,
+        value: accessCode,
       },
     });
 
     // Não encontrado
     if (!cong) {
-      alert("Codigo de acesso incorreto!");
+      setError("Código de acesso incorreto!");
       return;
     }
 
-    // make perfil options - se tiver perfis de responsaveis na congregacao
-    if (cong.responsible) {
-      const options = cong.responsible.map((responsavel, idx) => {
-        return (
+    if (!!cong.responsible) {
+      const options = [];
+
+      cong.responsible.map((responsavel, idx) => {
+        return options.push(
           <option key={idx} value={idx}>
-            {responsavel.name}
+            {responsavel}
           </option>
         );
       });
 
       setPerfisOptions(options);
+      setShow(true);
+
+      console.log(perfisOptions);
     }
-
-    setCongregacaoUser(congregUser);
-
-    setShow(true);
   };
 
   const entrar = async (e) => {
     e.preventDefault();
+    startLoading();
 
-    let where = {
-      attr: "accessCode",
-      comp: "==",
-      value: congregacaoUser.accessCode,
-    };
+    const res = await login({ email, password });
 
-    const congregacaoToLog = await getDocWhere({
-      collect: "congregacoes",
-      whr: where,
-    });
-    const congregacaoId = await getDocWhere({
-      collect: "congregacoes",
-      whr: where,
-      id: true,
-    });
+    if (res.ok) {
+      setUserInSession({
+        type: "congregacao",
+        email: email,
+        code: accessCode,
+        responsible: perfisOptions[perfil].props.children,
+      });
+    }
 
-    congregacaoToLog.responsible.map((responsavel, idx) => {
-      if (idx === perfil) {
-        responsavel.isLoged = true;
-      } else {
-        responsavel.isLoged = false;
-      }
-    });
-
-    await updateDocument("congregacoes", congregacaoId, congregacaoToLog);
-
-    await login({ ...congregacaoUser });
+    stopLoading();
   };
 
   const changeLogMod = () => {

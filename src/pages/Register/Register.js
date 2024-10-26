@@ -11,8 +11,9 @@ import {
 
 //hooks
 import { useState, useEffect } from "react";
-import { useAuthentication } from "../../hooks/useAuthentication";
 import { useFirestore } from "../../hooks/useFirestore";
+import { useAuth } from "../../contexts/AuthContext";
+import { useLoading } from "../../contexts/LoadingContext";
 
 const Register = () => {
   const [email, setEmail] = useState("");
@@ -25,35 +26,20 @@ const Register = () => {
   const [accessConde, setAccessConde] = useState("");
   const [accessCondeConfim, setAccessCondeConfim] = useState("");
   const [error, setError] = useState("");
-  const [registerLoading, setRegisterLoading] = useState("");
 
   const [regMode, setRegMode] = useState(false);
 
-  const { createUser, error: authError, loading } = useAuthentication();
-  const {
-    getDocWhere,
-    // error: dataError,
-    // loading: dataLoading,
-  } = useFirestore();
+  const { signup } = useAuth();
+  const { getDocWhere, setDocWithId } = useFirestore();
+  const { startLoading, stopLoading } = useLoading();
 
-  useEffect(() => {
-    if (authError) setError(authError);
-
-    // if (registerLoading) {
-    //   loadingScreen.classList.remove("d-none");
-    //   loadingScreen.classList.add("loading");
-    // }
-    // if (!registerLoading) {
-    //   loadingScreen.classList.add("d-none");
-    //   loadingScreen.classList.remove("loading");
-    // }
-  }, [authError]);
+  useEffect(() => {}, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     setError(null);
-    setRegisterLoading(true);
+    // Loading
     setName(name.toLocaleUpperCase());
 
     // --------- ---------- Validação Email
@@ -66,8 +52,7 @@ const Register = () => {
 
     if (isCongragationEmail) {
       setError("Este email já está a ser usado ");
-
-      setRegisterLoading(false);
+      // Loading false
       return;
     }
 
@@ -76,26 +61,37 @@ const Register = () => {
     if (regMode) {
       if (password !== passwordConfirm) {
         setError("Confirme a sua palavra passe corretamente!");
-
-        setRegisterLoading(false);
-
+        // Loading false
         return;
       }
 
-      await createUser({ name, email, password, adm: true });
+      startLoading();
+
+      const myNewAdmin = await signup({ email, password, username: name });
+
+      console.log(myNewAdmin.user);
+
+      if (myNewAdmin.ok) {
+        const res = await setDocWithId({
+          collect: "admins",
+          id: myNewAdmin.user.uid,
+          data: { displayName: name, email: myNewAdmin.user.email },
+        });
+
+        console.log(res);
+      }
+      stopLoading();
+      return;
     }
 
     // --------- ---------- Validação Codigo de acesso
-
     if (accessConde !== accessCondeConfim) {
       setError("Confirme o codigo de acesso!");
-
-      setRegisterLoading(false);
+      // Loading false
       return;
     }
 
     // --------- ---------- Validação Nome
-
     const isCongragationName = await getDocWhere("congregacoes", {
       attr: "name",
       comp: "==",
@@ -104,8 +100,7 @@ const Register = () => {
 
     if (isCongragationName) {
       setError("Já existe uma congregação com este nome");
-
-      setRegisterLoading(false);
+      // Loading false
       return;
     }
 
@@ -121,10 +116,24 @@ const Register = () => {
     };
 
     // --------- ---------- Criar congregação
-    await createUser(congregacaoUser);
+    const myNewCongregation = await signup({
+      name,
+      email,
+      password,
+      accessConde,
+    });
 
-    setRegisterLoading(false);
-    // console.log(res);
+    if (myNewCongregation.ok) {
+      await setDocWithId({
+        collect: "congregacoes",
+        id: myNewCongregation.user.uid,
+        data: congregacaoUser,
+      });
+
+      return;
+    }
+
+    // Loading false
   };
 
   const changeRegMod = () => {
@@ -142,10 +151,6 @@ const Register = () => {
       setAccessCondeConfim("");
     }
   };
-
-  if (loading || registerLoading) {
-    return <p>Carregando...</p>;
-  }
 
   return (
     <Container
@@ -327,17 +332,10 @@ const Register = () => {
                 </Row>
               </>
             )}
+            <Button variant="primary" className="w-100 mb-3" type="submit">
+              Enviar
+            </Button>
 
-            {!loading && (
-              <Button variant="primary" className="w-100 mb-3" type="submit">
-                Enviar
-              </Button>
-            )}
-            {loading && (
-              <Button variant="primary" className="w-100 mb-3" type="submit">
-                Aguarde...
-              </Button>
-            )}
             {error ? (
               <Alert variant="danger" onClose={() => setError("")} dismissible>
                 <p>{error}</p>

@@ -1,10 +1,10 @@
 import { NavLink } from "react-router-dom";
 
-const Footer = () => {
+const Footer = ({ theme }) => {
   return (
     <>
       <footer
-        className="flex items-center p-4 justify-center bg-gray-100"
+        className={`flex items-center p-4 justify-center ${theme.background}`}
         style={{
           height: "100",
           flexDirection: "column",
