@@ -2,6 +2,44 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Spinner } from "react-bootstrap";
 import { GoMoon } from "react-icons/go";
 import { MdOutlineWbSunny } from "react-icons/md";
+import squareOne from "../assets/images/squares/one.png";
+import squareTwo from "../assets/images/squares/two.png";
+import squareThree from "../assets/images/squares/three.png";
+import squareFour from "../assets/images/squares/four.png";
+import squareFive from "../assets/images/squares/five.png";
+import pinOne from "../assets/images/pins/one.png";
+import pinTwo from "../assets/images/pins/two.png";
+import pinThree from "../assets/images/pins/three.png";
+
+export const pinIcon = (number) => {
+  switch (number) {
+    case 1:
+      return pinOne;
+    case 2:
+      return pinTwo;
+    case 3:
+      return pinThree;
+    default:
+      return pinOne;
+  }
+};
+
+export const squareIcon = (number) => {
+  switch (number) {
+    case 1:
+      return squareOne;
+    case 2:
+      return squareTwo;
+    case 3:
+      return squareThree;
+    case 4:
+      return squareFour;
+    case 5:
+      return squareFive;
+    default:
+      return squareOne;
+  }
+};
 
 const TimestampToDate = ({ time, style = "" }) => {
   const [day, setDay] = useState("");

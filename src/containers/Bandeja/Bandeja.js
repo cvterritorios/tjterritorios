@@ -41,7 +41,7 @@ const Bandeja = ({
   const [loading, setLoading] = useState(false);
 
   const { isAdmin } = useAuth();
-  const { theme, cardColor } = useTheme();
+  const { theme, cardColor, backForm } = useTheme();
 
 
 
@@ -64,7 +64,6 @@ const Bandeja = ({
     viewGrid,
     isOrdered,
     orderDir,
-    congregacaoId,
     territoryCollection,
   ]);
 
@@ -133,7 +132,6 @@ const Bandeja = ({
           centered
         >
           <DetailsModal
-            title={"Detalhes do Território"}
             territory={territoryNowData}
             viewImage={() => setShowViewImageModal(true)}
           />
@@ -191,9 +189,9 @@ const Bandeja = ({
 
   return (
     <>
-      <Container className="flex flex-wrap lg:justify-evenly justify-center ">
+      <Container className="flex flex-wrap lg:justify-evenly justify-center">
         {collection?.map((item, idx) => (
-          <div id={item.id} key={idx} className="m-1">
+          <div id={item.id} key={idx} className="m-1 ">
             {!viewGrid && (
               <CardsList
                 item={item}
@@ -220,6 +218,7 @@ const Bandeja = ({
         ))}
         {!collection.length > 0 && <h1>Nenhum território encontrado</h1>}
       </Container>
+      
       {showOpcoesModal && myModals()}
     </>
   );

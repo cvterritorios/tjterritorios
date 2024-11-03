@@ -18,6 +18,8 @@ import Register from "./pages/Register/Register";
 import Home from "./pages/Home/Home";
 import About from "./pages/About/About";
 import Congregacoes from "./pages/Congregacoes/Congregacoes";
+import Tests from "./pages/Tests/Tests";
+
 import { useLocalStorage } from "./hooks/useLocalStorage";
 
 const App = () => {
@@ -72,6 +74,7 @@ const App = () => {
                   )
                 }
               />
+              <Route path="/tests" element={<Tests />} />
             </Routes>
             {/*  <Footer
               theme={{

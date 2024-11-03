@@ -1,0 +1,17 @@
+/* src/containers/QReader/generateQRCode.css */
+
+/* Define o container como posição relativa para posicionar a imagem de forma absoluta */
+.flex {
+  position: relative;
+}
+
+/* Estilos para a imagem do logo */
+.qr-logo {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Centraliza a imagem */
+  width: 20% !important; /* Ajusta o tamanho da imagem conforme necessário */
+  height: 20% !important; /* Ajusta o tamanho da imagem conforme necessário */
+  opacity: 1; /* Define a opacidade da imagem */
+}

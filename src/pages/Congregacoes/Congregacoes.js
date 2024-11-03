@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { Alert, Card, Col, Container, Row } from "react-bootstrap";
+import { Alert, Container } from "react-bootstrap";
 
 // My Hooks
 import { useFirestore } from "../../hooks/useFirestore";
 
 // Components
 import { CardCongregacaoFlip } from "../../components/Cards/Cards";
+import GenerateQRCode from "../../containers/QReader/generateQRCode";
 
 const Congregacoes = () => {
   const [congregacoesData, setCongregacoesData] = useState([{}]);
@@ -47,7 +48,7 @@ const Congregacoes = () => {
         {congregacoesData.length < 1 && <p>Não tem nenhuma congregação</p>}
         {""}
         {congregacoesData?.map((congregacao) => (
-          <CardCongregacaoFlip data={{ ...congregacao }}/>
+          <CardCongregacaoFlip data={{ ...congregacao }} />
         ))}{" "}
         {error ? (
           <Alert variant="danger" onClose={() => setError("")} dismissible>

@@ -17,6 +17,7 @@ const AuthContext = createContext({
   currentUser: null,
   responsible: null,
   congregation: null,
+  secretkey: null,
   login: async ({ email, password }) => {},
   signup: async ({ email, password, username }) => {},
   logout: async () => {},
@@ -39,6 +40,7 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [responsible, setResponsible] = useState(null);
   const [congregation, setCongregation] = useState(null);
+  const [secretkey, setSecretkey] = useState(null);
   const [isAuth, setIsAuth] = useState(false);
   const [isAdmin, setIsAdmin] = useState(!!isAdminFromSession());
 
@@ -86,6 +88,7 @@ export const AuthProvider = ({ children }) => {
   async function getCongregationData(usr) {
     const cong = await getDocId("congregacoes", usr.uid);
     setCongregation({ ...cong, displayName: usr.displayName });
+    setSecretkey(cong.secretkey);
   }
 
   useEffect(() => {
@@ -117,6 +120,7 @@ export const AuthProvider = ({ children }) => {
   const value = {
     currentUser,
     responsible,
+    secretkey,
     login,
     signup,
     logout,

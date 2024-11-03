@@ -1,9 +1,17 @@
 import { Html5QrcodeScanner } from "html5-qrcode";
 import { useEffect, useState } from "react";
 import { Container, Modal } from "react-bootstrap";
+import { useAuth } from "../../contexts/AuthContext";
+import { decryptQRCodeContent } from "./generateQRCode"; 
 
-const QReader = ({close}) => {
+const QReader = ({ close }) => {
   const [scanResult, setScanResult] = useState(null);
+
+  const { secretkey } = useAuth();
+
+  console.log(secretkey);
+
+  
 
   useEffect(() => {
     const scanner = new Html5QrcodeScanner("reader", {
@@ -16,7 +24,12 @@ const QReader = ({close}) => {
 
     function success(result) {
       scanner.clear();
-      setScanResult(result);
+      // Descriptografa o conteúdo
+      const decryptedContent = decryptQRCodeContent(result, secretkey);
+      // convert JSON to object
+      const content = JSON.parse(decryptedContent);
+      console.log(content);
+      setScanResult(decryptedContent);
     }
   }, []);
 

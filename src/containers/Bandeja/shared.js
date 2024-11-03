@@ -1,13 +1,12 @@
 import React from "react";
 import { Badge, Card, Col, Row } from "react-bootstrap";
-import {
-  GrStatusCritical,
-  GrStatusCriticalSmall,
-  GrStatusGood,
-} from "react-icons/gr";
+import { GrStatusGood } from "react-icons/gr";
 import { RxCrossCircled } from "react-icons/rx";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const RefTags = ({ item, setTag, setSearchFunction, noCliquable = false }) => {
+  const { searchAdv = () => {}, condition = [] } = setSearchFunction || {};
+
   return (
     <>
       {item.references.map((ref, idx) => (
@@ -24,7 +23,7 @@ const RefTags = ({ item, setTag, setSearchFunction, noCliquable = false }) => {
               ? undefined
               : () => {
                   setTag(ref);
-                  setSearchFunction(ref, true);
+                  searchAdv({ text: ref, tag: true, mylist: condition });
                 }
           }
         >
@@ -103,6 +102,8 @@ const CardsGrid = ({
     });
     handleShowOpcoesModal();
   };
+  const { gridCardBack } = useTheme();
+
   return (
     <Card
       className={`border rounded w-[10rem] md:w-[20rem] md:h-[20rem] ${background}`}
@@ -116,7 +117,7 @@ const CardsGrid = ({
               handleClick(item);
             }}
             src={item.map}
-          ></Card.Img>
+          />
         </Row>
 
         <Row
@@ -133,7 +134,10 @@ const CardsGrid = ({
             <AvailableStatus item={item} isPaint />
           </Row>
 
-          <Row className="w-full flex m-auto" name="references">
+          <Row
+            className="px-2 grid grid-flow-col auto-cols-max overflow-x-auto custom-scrollbar-hidden"
+            name="references"
+          >
             <RefTags
               item={item}
               setTag={setTag}
@@ -143,7 +147,11 @@ const CardsGrid = ({
           </Row>
         </div>
 
-        {BoxOfText({ text: item.observation, title: "Observação" })}
+        {BoxOfText({
+          text: item.observation,
+          title: "Observação",
+          backgroundColor: gridCardBack,
+        })}
       </Card.Body>
     </Card>
   );
@@ -181,10 +189,10 @@ const CardsList = ({
               src={item.map}
             ></Card.Img>
           </Col>
-          <Col className="px-1 absolute start-[6.2rem]">
-            <Row className="justify-between flex w-4/5 ">
+          <Col className="w-[77%] absolute start-[5.6rem]">
+            <Row className="space-x-3 w-fit">
               <Col
-                className="font-bold text-base text-start ml-2 hover:cursor-pointer"
+                className="font-bold text-base text-start whitespace-nowrap hover:cursor-pointer"
                 name="Description"
                 onClick={() => {
                   handleClick(item);
@@ -192,15 +200,15 @@ const CardsList = ({
               >
                 {item.description}
               </Col>
-              <Col className="flex justify-end" name="availeble">
+              <Col name="availeble">
                 <div className="text-base">
                   <AvailableStatus item={item} />
                 </div>
               </Col>
             </Row>
-            <Row className="w-full ">
+            <Row>
               <div
-                className="w-9/12 flex flex-row m-2 custom-scrollbar-hidden overflow-x-auto whitespace-nowrap"
+                className="ml-3 w-[90%] grid grid-flow-col auto-cols-max overflow-x-auto custom-scrollbar-hidden"
                 name="references"
               >
                 <RefTags
@@ -218,22 +226,41 @@ const CardsList = ({
   );
 };
 
-const BoxOfText = ({ text = "", component = null, title }) => {
-  const format =
-    "border bg-gray-100 my-2 border-black w-full rounded pt-2.5 p-2 text-xs ";
-
-  if (!text) {
-    return <div className="w-full h-16 pt-3"> - Sem {title} - </div>;
-  }
+const BoxOfText = ({
+  text = "",
+  component = null,
+  title,
+  backgroundColor,
+  textColor="text-gray-400",
+}) => {
+  const format = `border ${backgroundColor}/80 my-2  w-full rounded pt-2.5 p-2 text-xs `;
+  const { theme } = useTheme();
 
   return (
     <div className="relative border-2 border-transparent w-full ">
-      <div className="absolute bg-gray-200 border border-black rounded px-1 text-[10px] top-0.5 start-5 w-fit">
+      <div
+        className={`absolute border ${
+          !text && !component
+            ? `border-gray-600  ${
+                theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+              }`
+            : `border-black ${backgroundColor}`
+        } rounded px-1 ${textColor} text-[10px] top-0.5 start-5 w-fit`}
+      >
         {title}
       </div>
       {text && (
-        <textarea disabled className={format} value={text}>
+        <textarea disabled className={format + "border-black"} value={text}>
           {text}
+        </textarea>
+      )}
+      {!text && !component && (
+        <textarea
+          disabled
+          className={format + "text-gray-400 border-gray-600"}
+          value={"- Sem " + title}
+        >
+          "Sem " {title}
         </textarea>
       )}
       {component && <div className={format}>{component}</div>}

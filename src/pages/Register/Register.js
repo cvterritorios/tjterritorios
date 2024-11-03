@@ -28,12 +28,20 @@ const Register = () => {
   const [error, setError] = useState("");
 
   const [regMode, setRegMode] = useState(false);
+  const [listaCongregacoes, setListaCongregacoes] = useState([]);
 
   const { signup } = useAuth();
   const { getDocWhere, setDocWithId } = useFirestore();
   const { startLoading, stopLoading } = useLoading();
 
-  useEffect(() => {}, []);
+  useEffect(() => {
+    const fetchCongregacoes = async () => {
+      const congregacoes = await getDocWhere({ collect: "congregacoes" });
+      setListaCongregacoes(congregacoes);
+    };
+
+    listaCongregacoes.length < 1 && fetchCongregacoes();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -44,11 +52,9 @@ const Register = () => {
 
     // --------- ---------- Validação Email
 
-    const isCongragationEmail = await getDocWhere("congregacoes", {
-      attr: "email",
-      comp: "==",
-      value: email,
-    });
+    const isCongragationEmail = listaCongregacoes.find(
+      (congregacao) => congregacao.email === email
+    );
 
     if (isCongragationEmail) {
       setError("Este email já está a ser usado ");
@@ -92,11 +98,9 @@ const Register = () => {
     }
 
     // --------- ---------- Validação Nome
-    const isCongragationName = await getDocWhere("congregacoes", {
-      attr: "name",
-      comp: "==",
-      value: name,
-    });
+    const isCongragationName = listaCongregacoes.find(
+      (congregacao) => congregacao.name === name
+    );
 
     if (isCongragationName) {
       setError("Já existe uma congregação com este nome");
@@ -106,6 +110,7 @@ const Register = () => {
 
     // --------- ---------- Constante Congregação
     const congregacaoUser = {
+      secretkey: "tjterritorios2024",
       name,
       email,
       password,

@@ -24,6 +24,7 @@ import { ButtonWithSpinner, TimestampToDate } from "../shared";
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { useFirestore } from "../../hooks/useFirestore";
 import { useAuth } from "../../contexts/AuthContext";
+import PdfComp from "../PDFcmp/PdfComp";
 
 const TerritoryModal = ({
   title,
@@ -380,14 +381,8 @@ const DetailsModal = ({ territory, viewImage }) => {
               variant="top"
               src={map}
             ></Card.Img>
-            <div className="space-x-2 flex justify-center w-full">
-              <Button size="sm" variant="secondary">
-                Download
-              </Button>
-              <Button size="sm" variant="info">
-                Enviar
-              </Button>
-              <Button size="sm">Abrir</Button>
+            <div className=" flex justify-center w-full">
+              <PdfComp territory={territory} />
             </div>
           </div>
 
@@ -423,13 +418,13 @@ const DetailsModal = ({ territory, viewImage }) => {
               <div className="flex items-center space-x-2">
                 <h5>Pedidos Mês</h5>
                 <div className="bg-gray-100 border border-gray-600 px-2 rounded ">
-                  {requests}
+                  {requests.current}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <h5>Pedidos Total</h5>
                 <div className="bg-gray-100 border border-gray-600 px-2 rounded ">
-                  {requests + 9}
+                  {requests.all}
                 </div>
               </div>
             </div>

@@ -311,7 +311,6 @@ export const useFirestore = () => {
 
   const getTerritories = async (
     ord = { attr: "", dir: "" },
-    isAdmin = false,
     congregacaoId = false
   ) => {
     validate("start");
