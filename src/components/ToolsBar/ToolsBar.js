@@ -115,40 +115,9 @@ const ToolsBar = ({ create }) => {
     if (isAuth && !isAdmin) setCongregacaoSelected(user.uid);
 
     async function getTer() {
-      const imgs = [
-        "https://firebasestorage.googleapis.com/v0/b/tjterritorios.appspot.com/o/territorios%2F0eLvKAxYvJJcETV3mVEu%2Fmapa.png?alt=media&token=55b00322-aa8d-4834-bf40-43f33fe0d863",
-        "https://firebasestorage.googleapis.com/v0/b/tjterritorios.appspot.com/o/territorios%2FGgN2zBOUDkhVS3cF38cY%2Fmapa.png?alt=media&token=fbccc926-396b-41c6-a894-7cb4dfe9647c",
-      ];
-      const references = [
-        "G Sao Joao",
-        "Pelourinho",
-        "G Santo Antonio",
-        "G Sao Francisco",
-      ];
+     
 
-      const lista = Array.from(
-        { length: 5 + Math.floor(Math.random() * 6) },
-        () => ({
-          requests: {
-            current: Math.floor(Math.random() * 10),
-            all: Math.floor(Math.random() * 100),
-          },
-          createdAt: new Date(
-            Date.now() - Math.floor(Math.random() * 7776000000)
-          ),
-          description: "Território N " + Math.floor(Math.random() * 100),
-          available: Math.random() < 0.5,
-          map: imgs[Math.floor(Math.random() * imgs.length)],
-          observation:
-            Math.random() < 0.5
-              ? ""
-              : `Observação aleatória ${Math.floor(Math.random() * 100)}`,
-          references: Array.from(
-            { length: Math.floor(Math.random() * 3) + 1 },
-            () => references[Math.floor(Math.random() * references.length)]
-          ),
-        })
-      );
+      const lista = makeRandom("territory");
 
       /* await getTerritories({
         congregacaoId: user.uid,
@@ -426,6 +395,52 @@ const ToolsBar = ({ create }) => {
       />
     </>
   );
+};
+
+const makeRandom = (type) => {
+  const imgs = [
+    "https://firebasestorage.googleapis.com/v0/b/tjterritorios.appspot.com/o/territorios%2F0eLvKAxYvJJcETV3mVEu%2Fmapa.png?alt=media&token=55b00322-aa8d-4834-bf40-43f33fe0d863",
+    "https://firebasestorage.googleapis.com/v0/b/tjterritorios.appspot.com/o/territorios%2FGgN2zBOUDkhVS3cF38cY%2Fmapa.png?alt=media&token=fbccc926-396b-41c6-a894-7cb4dfe9647c",
+  ];
+  const references = [
+    "G Sao Joao",
+    "Pelourinho",
+    "G Santo Antonio",
+    "G Sao Francisco",
+  ];
+
+  if(type === "territory"){
+    const lista = Array.from(
+      { length: 5 + Math.floor(Math.random() * 6) },
+      () => ({
+      requests: {
+        current: Math.floor(Math.random() * 10),
+        all: Math.floor(Math.random() * 100),
+      },
+      createdAt: new Date(
+        Date.now() - Math.floor(Math.random() * 7776000000)
+      ),
+      description: "Território N " + Math.floor(Math.random() * 100),
+      available: Math.random() < 0.5,
+      map: imgs[Math.floor(Math.random() * imgs.length)],
+      observation:
+        Math.random() < 0.5
+          ? ""
+          : `Observação aleatória ${Math.floor(Math.random() * 100)}`,
+      references: Array.from(
+        { length: Math.floor(Math.random() * 3) + 1 },
+        () => references[Math.floor(Math.random() * references.length)]
+      ),
+    })
+  );
+
+    return lista;
+  }
+  if(type === "congregation"){
+
+
+    return [];
+  }
 };
 
 export default ToolsBar;

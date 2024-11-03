@@ -6,6 +6,7 @@ import { useLocalStorage } from "../../hooks/useLocalStorage";
 import {
   DetailsModal,
   MenuOpcoesModal,
+  MyModal,
   TerritoryModal,
   ViewImageModal,
 } from "../../components/Modal/Modal";
@@ -104,23 +105,24 @@ const Bandeja = ({
     return (
       <>
         {/* Menu de Opocoes */}
-        <Modal
-          size="sm"
+        <MyModal
           show={showOpcoesModal}
           onHide={() => handleCloseOpcoesModal()}
           centered
+          size="md"
+          theme={theme}
         >
           <MenuOpcoesModal
             description={territoryNowData.description}
             available={territoryNowData.available}
-            closeSelf={() => handleCloseOpcoesModal()}
             isAdmin={isAdmin}
             /* show Modals opcoes */
             show_Update={() => setShowUpdateModal(true)}
             show_Read={() => setShowDetailsModal(true)}
             show_Delete={() => setShowDeleteModal(true)}
+            theme={theme}
           />
-        </Modal>
+        </MyModal>
 
         {/* Opcao Read - Detalhes */}
         <Modal

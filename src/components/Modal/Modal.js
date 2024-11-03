@@ -282,31 +282,25 @@ const TerritoryModal = ({
 const MenuOpcoesModal = ({
   description,
   available = false,
-  closeSelf,
   isAdmin,
   show_Read,
   show_Update,
   show_Delete,
+  theme,
 }) => {
-  const changeModal = (modal) => {
-    closeSelf();
-
-    setTimeout(() => {
-      modal();
-    }, 3000);
-  };
+  const VARIANT = theme === "dark" ? "dark" : "light";
 
   return (
     <>
       <ButtonGroup vertical className="divide-y divide-gray-300 w-full ">
-        <Button variant="light" className="text-lg font-semibold py-2" disabled>
+        <Button variant={VARIANT} className="text-lg font-semibold py-2" disabled>
           {description}
         </Button>
 
         <Button
-          variant={isAdmin ? "secondary" : "light"}
+          variant={isAdmin ? "secondary" : VARIANT}
           disabled={isAdmin}
-          className={`text-lg font-medium py-2`}
+          className={`text-lg font-medium py-2 border-none`}
           onClick={() => alert("se disponivel atribuir, se não desatribuir")}
         >
           {available ? (
@@ -317,8 +311,8 @@ const MenuOpcoesModal = ({
         </Button>
 
         <Button
-          variant="light"
-          className="text-lg font-medium py-2"
+          variant={VARIANT}
+          className="text-lg font-medium py-2 border-none"
           onClick={() => {
             show_Read();
           }}
@@ -327,9 +321,9 @@ const MenuOpcoesModal = ({
         </Button>
 
         <Button
-          variant={isAdmin ? "secondary" : "light"}
+          variant={isAdmin ? "secondary" : VARIANT}
           disabled={isAdmin}
-          className="text-lg font-medium py-2"
+          className="text-lg font-medium py-2 border-none"
           onClick={() => {
             show_Update();
           }}
@@ -338,9 +332,9 @@ const MenuOpcoesModal = ({
         </Button>
 
         <Button
-          variant={isAdmin ? "secondary" : "light"}
+          variant={isAdmin ? "secondary" : VARIANT}
           disabled={isAdmin}
-          className="text-lg font-medium py-2"
+          className="text-lg font-medium py-2 border-none"
           onClick={() => {
             show_Delete();
           }}
@@ -463,4 +457,47 @@ const ViewImageModal = ({ image, closeSelf }) => {
   );
 };
 
-export { TerritoryModal, MenuOpcoesModal, DetailsModal, ViewImageModal };
+const MyModal = ({
+  show,
+  children,
+  onHide,
+  isStatic = false,
+  className = "",
+  centered = false,
+  size = "md",
+  theme,
+}) => {
+  const mySize =
+    size === "xs"
+      ? "w-64" //42%
+      : size === "sm"
+      ? "w-72" //50%
+      : size === "md"
+      ? "w-80" //58%
+      : size === "lg"
+      ? "w-96" //66%
+      : size;
+  const BACKGROUND = theme === "light" ? "fixed top-0 bottom-0 start-0 end-0 bg-black/60 z-50" : "fixed top-0 bottom-0 start-0 end-0 bg-white/10 z-50";
+  const CENTERPOSITION = "bottom-1/2 end-1/2 translate-x-1/2 translate-y-1/2";
+  const CONTAINER = `fixed rounded-lg ${
+    !centered ? "top-0 translate-x-1/2" : ""
+  } z-[60] ${theme === "light" ? "bg-white" : "bg-black"} ${mySize} ${centered ? CENTERPOSITION : ""} `;
+
+  if (show)
+    return (
+      <>
+        <div className={BACKGROUND} onClick={isStatic ? null : onHide}></div>
+        <div className={`${CONTAINER} ${className}`}>{children}</div>
+      </>
+    );
+
+  return null;
+};
+
+export {
+  TerritoryModal,
+  MenuOpcoesModal,
+  DetailsModal,
+  ViewImageModal,
+  MyModal,
+};
