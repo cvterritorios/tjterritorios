@@ -155,7 +155,7 @@ const NavBar = () => {
               )}
 
               {isAdmin && (
-                <Card>
+                <Card className="flex flex-col justify-center items-center space-y-1">
                   <Row>
                     <Col>
                       <strong>Cargo:</strong>

@@ -25,6 +25,7 @@ import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { useFirestore } from "../../hooks/useFirestore";
 import { useAuth } from "../../contexts/AuthContext";
 import PdfComp from "../PDFcmp/PdfComp";
+import { useTheme } from "../../contexts/ThemeContext";
 
 const TerritoryModal = ({
   title,
@@ -293,7 +294,10 @@ const MenuOpcoesModal = ({
   return (
     <>
       <ButtonGroup vertical className="divide-y divide-gray-300 w-full ">
-        <Button variant={VARIANT} className="text-lg font-semibold py-2" disabled>
+        <Button
+          variant={VARIANT}
+          className={`text-lg font-bold py-2 bg-${VARIANT} hover:bg-${VARIANT} border-${VARIANT} hover:cursor-default`}
+        >
           {description}
         </Button>
 
@@ -359,6 +363,8 @@ const DetailsModal = ({ territory, viewImage }) => {
     assignment,
   } = territory;
 
+  const { backTextView } = useTheme();
+
   return (
     <>
       <Modal.Header closeButton className="flex items-center">
@@ -367,7 +373,7 @@ const DetailsModal = ({ territory, viewImage }) => {
       </Modal.Header>
 
       <Modal.Body className="pt-0">
-        <div className="md:space-x-2 md:flex md:items-center md:justify-between">
+        <div className="md:space-x-2 md:flex md:items-top md:justify-between">
           <div className="h-full space-y-3 md:w-1/2">
             <Card.Img
               onClick={() => viewImage()}
@@ -385,7 +391,7 @@ const DetailsModal = ({ territory, viewImage }) => {
               <h5>Data de inclusão</h5>
               <TimestampToDate
                 time={createdAt}
-                style={"bg-gray-100 border border-gray-600 px-2 rounded"}
+                style={`${backTextView} px-2 rounded`}
               />
             </div>
 
@@ -394,7 +400,7 @@ const DetailsModal = ({ territory, viewImage }) => {
                 <h5>Ultima atualização</h5>
                 <TimestampToDate
                   time={updatedAt}
-                  style={"bg-gray-100 border border-gray-600 px-2 rounded"}
+                  style={`${backTextView} px-2 rounded`}
                 />
               </div>
             )}
@@ -411,13 +417,13 @@ const DetailsModal = ({ territory, viewImage }) => {
             <div className="flex justify-between">
               <div className="flex items-center space-x-2">
                 <h5>Pedidos Mês</h5>
-                <div className="bg-gray-100 border border-gray-600 px-2 rounded ">
+                <div className={`${backTextView} px-2 rounded `}>
                   {requests.current}
                 </div>
               </div>
               <div className="flex items-center space-x-2">
                 <h5>Pedidos Total</h5>
-                <div className="bg-gray-100 border border-gray-600 px-2 rounded ">
+                <div className={`${backTextView} px-2 rounded `}>
                   {requests.all}
                 </div>
               </div>
@@ -477,11 +483,16 @@ const MyModal = ({
       : size === "lg"
       ? "w-96" //66%
       : size;
-  const BACKGROUND = theme === "light" ? "fixed top-0 bottom-0 start-0 end-0 bg-black/60 z-50" : "fixed top-0 bottom-0 start-0 end-0 bg-white/10 z-50";
+  const BACKGROUND =
+    theme === "light"
+      ? "fixed top-0 bottom-0 start-0 end-0 bg-black/60 z-50"
+      : "fixed top-0 bottom-0 start-0 end-0 bg-white/10 z-50";
   const CENTERPOSITION = "bottom-1/2 end-1/2 translate-x-1/2 translate-y-1/2";
   const CONTAINER = `fixed rounded-lg ${
     !centered ? "top-0 translate-x-1/2" : ""
-  } z-[60] ${theme === "light" ? "bg-white" : "bg-black"} ${mySize} ${centered ? CENTERPOSITION : ""} `;
+  } z-[60] ${theme === "light" ? "bg-white" : "bg-black"} ${mySize} ${
+    centered ? CENTERPOSITION : ""
+  } `;
 
   if (show)
     return (

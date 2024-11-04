@@ -226,31 +226,19 @@ const CardsList = ({
   );
 };
 
-const BoxOfText = ({
-  text = "",
-  component = null,
-  title,
-  backgroundColor,
-  textColor="text-gray-400",
-}) => {
-  const format = `border ${backgroundColor}/80 my-2  w-full rounded pt-2.5 p-2 text-xs `;
-  const { theme } = useTheme();
+const BoxOfText = ({ text = "", component = null, title }) => {
+  const { backTextView, theme, textColor } = useTheme();
+  const format = `border-1 ${backTextView} my-2  w-full rounded pt-2.5 p-2 text-xs `;
 
   return (
     <div className="relative border-2 border-transparent w-full ">
       <div
-        className={`absolute border ${
-          !text && !component
-            ? `border-gray-600  ${
-                theme === "dark" ? "bg-gray-700" : "bg-gray-200"
-              }`
-            : `border-black ${backgroundColor}`
-        } rounded px-1 ${textColor} text-[10px] top-0.5 start-5 w-fit`}
+        className={`absolute border-1 ${theme === "dark" ? "border-gray-200" : "border-black"} ${backTextView} rounded px-1 ${textColor} text-[10px] top-0.5 start-5 w-fit`}
       >
         {title}
       </div>
       {text && (
-        <textarea disabled className={format + "border-black"} value={text}>
+        <textarea disabled className={format + ` ${theme === "dark" ? "border-gray-200" : "border-black"}`} value={text}>
           {text}
         </textarea>
       )}
@@ -269,12 +257,12 @@ const BoxOfText = ({
 };
 
 const AssignmentInfo = ({ publisher, date, responsible }) => {
-  const format =
-    "border bg-gray-100 my-2 border-black w-full rounded py-2 px-2.5";
+  const { backTextView, theme } = useTheme();
+  const format = `border ${backTextView} my-2 border-black w-full rounded py-2 px-2.5`;
 
   return (
     <div className="relative border-2 border-transparent w-full ">
-      <div className="absolute bg-gray-200 border border-black rounded px-1 text-[10px] top-0.5 start-5 w-fit">
+      <div className={`absolute border-1 ${theme === "dark" ? "border-gray-200" : "border-black"} ${backTextView} rounded px-1 text-[10px] top-0.5 start-5 w-fit`}>
         Atribuido em {date}
       </div>
       <div className={format}>
@@ -282,7 +270,7 @@ const AssignmentInfo = ({ publisher, date, responsible }) => {
           <span className="font-bold text-lg">{publisher}</span>
         </div>
       </div>
-      <div className="absolute bg-gray-200 border border-black rounded px-1 text-[12px] bottom-0 end-5 w-fit">
+      <div className={`absolute border-1 ${theme === "dark" ? "border-gray-200" : "border-black"} ${backTextView} rounded px-1 text-[12px] bottom-0 end-5 w-fit`}>
         Por: {responsible}
       </div>
     </div>

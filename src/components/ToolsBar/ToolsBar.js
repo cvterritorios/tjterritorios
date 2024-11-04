@@ -115,8 +115,6 @@ const ToolsBar = ({ create }) => {
     if (isAuth && !isAdmin) setCongregacaoSelected(user.uid);
 
     async function getTer() {
-     
-
       const lista = makeRandom("territory");
 
       /* await getTerritories({
@@ -151,7 +149,6 @@ const ToolsBar = ({ create }) => {
       );
       setCollectionSearch(resultado);
     }
-
   };
 
   const handleFilter = (type, value) => {
@@ -207,7 +204,9 @@ const ToolsBar = ({ create }) => {
 
         <ButtonGroup
           aria-label="toolsbar"
-          className={`my-3 h-10 md:w-auto w-full border-2 ${theme === "dark" ? "border-slate-700" : "border-slate-300"}`}
+          className={`my-3 h-10 md:w-auto w-full border-2 ${
+            theme === "dark" ? "border-slate-700" : "border-slate-300"
+          }`}
         >
           <Button
             disabled
@@ -398,6 +397,7 @@ const ToolsBar = ({ create }) => {
 };
 
 const makeRandom = (type) => {
+  const cids = ["0eLvKAxYvJJcETV3mVEu", "GgN2zBOUDkhVS3cF38cY"];
   const imgs = [
     "https://firebasestorage.googleapis.com/v0/b/tjterritorios.appspot.com/o/territorios%2F0eLvKAxYvJJcETV3mVEu%2Fmapa.png?alt=media&token=55b00322-aa8d-4834-bf40-43f33fe0d863",
     "https://firebasestorage.googleapis.com/v0/b/tjterritorios.appspot.com/o/territorios%2FGgN2zBOUDkhVS3cF38cY%2Fmapa.png?alt=media&token=fbccc926-396b-41c6-a894-7cb4dfe9647c",
@@ -409,36 +409,78 @@ const makeRandom = (type) => {
     "G Sao Francisco",
   ];
 
-  if(type === "territory"){
+  if (type === "territory") {
+    const publishers = ["Americo Santos", "Benedito Silva", "Cesar Eduardo"];
+    const responsibles = ["Roberto Silva", "Maria Antonieta", "Joao Pedro"];
+
     const lista = Array.from(
       { length: 5 + Math.floor(Math.random() * 6) },
       () => ({
-      requests: {
-        current: Math.floor(Math.random() * 10),
-        all: Math.floor(Math.random() * 100),
-      },
-      createdAt: new Date(
-        Date.now() - Math.floor(Math.random() * 7776000000)
-      ),
-      description: "Território N " + Math.floor(Math.random() * 100),
-      available: Math.random() < 0.5,
-      map: imgs[Math.floor(Math.random() * imgs.length)],
-      observation:
-        Math.random() < 0.5
-          ? ""
-          : `Observação aleatória ${Math.floor(Math.random() * 100)}`,
-      references: Array.from(
-        { length: Math.floor(Math.random() * 3) + 1 },
-        () => references[Math.floor(Math.random() * references.length)]
-      ),
-    })
-  );
+        cid: cids[Math.floor(Math.random() * cids.length)],
+        id: Math.random().toString(36).substring(2, 22),
+
+        createdAt: {
+          seconds: Math.floor(
+            (Date.now() - Math.floor(Math.random() * 7776000000)) / 1000
+          ),
+          nanoseconds: 0,
+          toMillis: function () {
+            return this.seconds * 1000;
+          },
+        },
+        updatedAt: {
+          seconds: Math.floor(
+            (Date.now() - Math.floor(Math.random() * 7776000000)) / 1000
+          ),
+          nanoseconds: 0,
+          toMillis: function () {
+            return this.seconds * 1000;
+          },
+        },
+        description: "Território N " + Math.floor(Math.random() * 100 + 1),
+        available: Math.random() < 0.5,
+        map: imgs[Math.floor(Math.random() * imgs.length)],
+        observation:
+          Math.random() < 0.5
+            ? ""
+            : `Observação aleatória ${Math.floor(Math.random() * 100)}`,
+        references: Array.from(
+          { length: Math.floor(Math.random() * 3) + 1 },
+          () => references[Math.floor(Math.random() * references.length)]
+        ),
+        requests: {
+          current: Math.floor(Math.random() * 10),
+          all: Math.floor(Math.random() * 100),
+        },
+      })
+    );
+
+    lista.forEach((item) => {
+      if (!item.available) {
+        item.assignment = {
+          date: {
+            seconds: Math.floor(
+              (Date.now() - Math.floor(Math.random() * 7776000000)) / 1000
+            ),
+            nanoseconds: 0,
+            toMillis: function () {
+              return this.seconds * 1000;
+            },
+          },
+          publisher: {
+            name: publishers[Math.floor(Math.random() * publishers.length)],
+            pid: Math.random().toString(36).substring(2, 22),
+          },
+          responsible: {
+            name: responsibles[Math.floor(Math.random() * responsibles.length)],
+          },
+        };
+      }
+    });
 
     return lista;
   }
-  if(type === "congregation"){
-
-
+  if (type === "congregation") {
     return [];
   }
 };

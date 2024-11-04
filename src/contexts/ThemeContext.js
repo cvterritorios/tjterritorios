@@ -13,8 +13,8 @@ const ThemeContext = createContext({
   navbarText: "",
   navbarHover: "",
   textColor: "",
-  textHover: "",
-  gridCardBack:""
+  gridCardBack: "",
+  backTextView: "",
 });
 
 export const useTheme = () => {
@@ -35,10 +35,10 @@ export const ThemeProvider = ({ children }) => {
   const [navbarHover, setNavbarHover] = useState("");
   const [backSubColor, setBackSubColor] = useState("");
   const [textColor, setTextColor] = useState("");
-  const [textHover, setTextHover] = useState("");
   const [backForm, setBackForm] = useState("");
   const [cardColor, setCardColor] = useState("");
-  const [gridCardBack, setGridCardBack] = useState("")
+  const [gridCardBack, setGridCardBack] = useState("");
+  const [backTextView, setBackTextView] = useState("");
 
   const toggleTheme = () => {
     if (theme === "light") {
@@ -62,13 +62,13 @@ export const ThemeProvider = ({ children }) => {
       setNavbarText("text-gray-300");
       setNavbarHover("hover:text-slate-400");
       // Text
-      setTextColor("text-slate-300");
-      setTextHover("hover:text-slate-300");
+      setTextColor("text-slate-100 hover:text-slate-500");
       // Form
       setBackForm("bg-gray-300 focus:bg-gray-300/60 ");
       // Card
       setCardColor("bg-gray-700");
-      setGridCardBack("bg-gray-600")
+      setGridCardBack("bg-gray-600");
+      setBackTextView("bg-gray-700");
     } else if (mode === "light") {
       // Background
       setBackColor("bg-bg-gray-200 ");
@@ -78,14 +78,13 @@ export const ThemeProvider = ({ children }) => {
       setNavbarText("text-gray-900");
       setNavbarHover("hover:text-slate-700");
       // Text
-      setTextColor("text-slate-900");
-      setTextHover("hover:text-slate-900");
+      setTextColor("text-gray-900 hover:text-gray-700");
       // Form
       setBackForm("bg-white ");
       // Card
       setCardColor("bg-gray-100");
-      setGridCardBack("bg-white")
-
+      setGridCardBack("bg-white");
+      setBackTextView("bg-gray-100");
     }
   };
 
@@ -104,10 +103,10 @@ export const ThemeProvider = ({ children }) => {
         backColor,
         backSubColor,
         textColor,
-        textHover,
         backForm,
         cardColor,
-        gridCardBack
+        gridCardBack,
+        backTextView,
       }}
     >
       {children}
