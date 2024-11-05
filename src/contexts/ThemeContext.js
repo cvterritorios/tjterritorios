@@ -13,7 +13,6 @@ const ThemeContext = createContext({
   navbarText: "",
   navbarHover: "",
   textColor: "",
-  gridCardBack: "",
   backTextView: "",
 });
 
@@ -37,7 +36,6 @@ export const ThemeProvider = ({ children }) => {
   const [textColor, setTextColor] = useState("");
   const [backForm, setBackForm] = useState("");
   const [cardColor, setCardColor] = useState("");
-  const [gridCardBack, setGridCardBack] = useState("");
   const [backTextView, setBackTextView] = useState("");
 
   const toggleTheme = () => {
@@ -67,7 +65,6 @@ export const ThemeProvider = ({ children }) => {
       setBackForm("bg-gray-300 focus:bg-gray-300/60 ");
       // Card
       setCardColor("bg-gray-700");
-      setGridCardBack("bg-gray-600");
       setBackTextView("bg-gray-700");
     } else if (mode === "light") {
       // Background
@@ -83,7 +80,6 @@ export const ThemeProvider = ({ children }) => {
       setBackForm("bg-white ");
       // Card
       setCardColor("bg-gray-100");
-      setGridCardBack("bg-white");
       setBackTextView("bg-gray-100");
     }
   };
@@ -105,7 +101,6 @@ export const ThemeProvider = ({ children }) => {
         textColor,
         backForm,
         cardColor,
-        gridCardBack,
         backTextView,
       }}
     >

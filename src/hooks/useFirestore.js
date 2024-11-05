@@ -56,22 +56,6 @@ export const useFirestore = () => {
     }
   }
 
-  async function nowCongregationId(isAdmin = false) {
-    // get in firebase current user logged
-    const user = auth.currentUser;
-
-    if (!isAdmin) {
-      const congregacaoLogged = await getDocWhere("congregacoes", {
-        attr: "uid",
-        comp: "==",
-        value: user.uid,
-      });
-
-      return user.uid;
-    }
-    return false;
-  }
-
   // functions - sets
   const setDocument = async (collect = "", data = {}) => {
     validate("start");
@@ -206,6 +190,7 @@ export const useFirestore = () => {
   // functions - gets
   const getDocId = async (collect, documentId) => {
     validate("start");
+    console.log("getDocId is running");
 
     const docRef = doc(db, collect, documentId);
     const docSnap = await getDoc(docRef);
@@ -227,6 +212,7 @@ export const useFirestore = () => {
   }) => {
     //where {attr, comp, value}
     validate("start");
+    console.log("getDocWhere is running");
 
     try {
       const q = query(
@@ -261,6 +247,7 @@ export const useFirestore = () => {
 
   const getCollection = async (collect, ord = { attr: "", dir: "" }) => {
     validate("start");
+    console.log("getCollection is running");
 
     const q = query(
       collection(db, collect),
@@ -280,6 +267,8 @@ export const useFirestore = () => {
   ) => {
     //where {attr, comp, value}
     validate("start");
+    console.log("getCollectionWhere is running");
+
 
     try {
       const q = query(
@@ -314,6 +303,7 @@ export const useFirestore = () => {
     congregacaoId = false
   ) => {
     validate("start");
+    console.log("getTerritories is running");
 
     const collect = "territorios";
     const cid = congregacaoId !== undefined ? congregacaoId : user.uid;
@@ -343,6 +333,7 @@ export const useFirestore = () => {
     congregacaoId = "",
   }) => {
     validate("start");
+    console.log("getTerritoriesWhere is running");
 
     const collect = "territorios";
     const cid = user.uid;

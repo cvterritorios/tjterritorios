@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import TerritoryPdf from "../TerritoryPdf";
 import { PDFViewer, PDFDownloadLink } from "@react-pdf/renderer";
 import mapa from "../../assets/images/imagemTrt.png";
 import GenerateQRCode from "../../containers/QReader/generateQRCode";
 import { Button, Modal } from "react-bootstrap";
 
-const PdfComp = ({territory}) => {
+const PdfComp = ({ territory, image }) => {
   const [qrTerritoryURL, setQRTerritoryURL] = useState(null);
   const [qrMapURL, setQRMapURL] = useState(null);
   const [qrCodesGenerated, setQRCodesGenerated] = useState(0);
@@ -26,20 +26,14 @@ const PdfComp = ({territory}) => {
   // Componente do PDF para reutilização
   const PdfDocument = () => (
     <TerritoryPdf
-      mapImage={mapa}
+      mapImage={image}
       qrTerritory={qrTerritoryURL}
       qrCodeMap={qrMapURL}
-      territoryNumber="04"
-      location="Covilhã"
-      northPosition="top"
-      streets={[
-        "Santo António",
-        "São João",
-        "São Pedro",
-        "São Sebastião",
-        "São Vicente",
-      ]}
-      references={["Jardim da Serra", "Pelourinho", "São João"]}
+      territoryDescription={territory.description}
+      location={territory.location}
+      northPosition={territory.northPosition}
+      streets={territory.streets}
+      references={territory.references}
     />
   );
 
@@ -51,9 +45,14 @@ const PdfComp = ({territory}) => {
       show={showModal}
       onHide={() => setShowModal(false)}
     >
-      <Modal.Header>
+      <Modal.Header
+        closeButton
+        className="border-none font-bold text-md flex items-center"
+      >
         <Modal.Title>
-          <h1>Territorio 04 - Covilhã</h1>
+          <h1>
+            {territory.description} - {territory.location}
+          </h1>
         </Modal.Title>
       </Modal.Header>
       <Modal.Body className="h-96">
@@ -63,7 +62,6 @@ const PdfComp = ({territory}) => {
       </Modal.Body>
     </Modal>
   );
-
 
   return (
     <div className="flex justify-center items-center">
@@ -77,7 +75,7 @@ const PdfComp = ({territory}) => {
           )}
           {!qrMapURL && qrTerritoryURL && (
             <GenerateQRCode
-              content="https://www.google.com"
+              content={territory.mapLinkGoogle}
               setUrl={(url) => handleQRGenerated(url, "map")}
               isLink={true}
             />
@@ -92,7 +90,7 @@ const PdfComp = ({territory}) => {
         <div className="flex space-x-2">
           <PDFDownloadLink
             document={<PdfDocument />}
-            fileName="territorio-04-covilha.pdf"
+            fileName={`${territory.description}.pdf`}
           >
             {({ loading }) => (
               <Button

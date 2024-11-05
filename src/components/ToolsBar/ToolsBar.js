@@ -412,6 +412,13 @@ const makeRandom = (type) => {
   if (type === "territory") {
     const publishers = ["Americo Santos", "Benedito Silva", "Cesar Eduardo"];
     const responsibles = ["Roberto Silva", "Maria Antonieta", "Joao Pedro"];
+    const locations = ["Covilhã", "Canhoso", "Covilhã (Baixa)"];
+    const streets = ["Rua da Alegria", "Rua do Sol", "Rua da Paz"];
+    const northPosition = ["top", "right", "left"];
+    const mapLinkGoogle = [
+      "https://www.google.com/maps/d/viewer?mid=1lIn5o_kqmjOC61YY2QOH2_VDfXLNvx4&ll=40.272026700946476%2C-7.498635873016362&z=18",
+      "https://www.google.com/maps/d/viewer?mid=1XnWJRvtxMKoHU7FO6Zy7jC1EWyZhoLA&ll=40.27140379726805%2C-7.49695730788465&z=18",
+    ];
 
     const lista = Array.from(
       { length: 5 + Math.floor(Math.random() * 6) },
@@ -437,9 +444,18 @@ const makeRandom = (type) => {
             return this.seconds * 1000;
           },
         },
+        northPosition:
+          northPosition[Math.floor(Math.random() * northPosition.length)],
+        streets: Array.from(
+          { length: Math.floor(Math.random() * 3) + 1 },
+          () => streets[Math.floor(Math.random() * streets.length)]
+        ),
+        location: locations[Math.floor(Math.random() * locations.length)],
         description: "Território N " + Math.floor(Math.random() * 100 + 1),
         available: Math.random() < 0.5,
         map: imgs[Math.floor(Math.random() * imgs.length)],
+        mapLinkGoogle:
+          mapLinkGoogle[Math.floor(Math.random() * mapLinkGoogle.length)],
         observation:
           Math.random() < 0.5
             ? ""

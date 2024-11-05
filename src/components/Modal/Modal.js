@@ -20,12 +20,17 @@ import {
 } from "../../containers/Bandeja/shared";
 import { ButtonWithSpinner, TimestampToDate } from "../shared";
 
+import northTop from "../../assets/images/north/top.png";
+import northRight from "../../assets/images/north/right.png";
+import northLeft from "../../assets/images/north/left.png";
+
 // hooks
 import { useLocalStorage } from "../../hooks/useLocalStorage";
 import { useFirestore } from "../../hooks/useFirestore";
 import { useAuth } from "../../contexts/AuthContext";
 import PdfComp from "../PDFcmp/PdfComp";
 import { useTheme } from "../../contexts/ThemeContext";
+import { NorthLeftIcon, NorthRightIcon, NorthTopIcon } from "../Icons/MyIcons";
 
 const TerritoryModal = ({
   title,
@@ -42,7 +47,17 @@ const TerritoryModal = ({
   const [description, setDescription] = useState(
     territory.id ? territory.description : "Território "
   );
-  const [referencias, setReferencias] = useState(
+  const [location, setLocation] = useState(
+    territory.id ? territory.location : ""
+  );
+  const [northPosition, setNorthPosition] = useState(
+    territory.id ? territory.northPosition : "top"
+  );
+  const [mapLinkGoogle, setMapLinkGoogle] = useState(
+    territory.id ? territory.mapLinkGoogle : ""
+  );
+  const [streets, setStreets] = useState(territory.id ? territory.streets : []);
+  const [references, setReferences] = useState(
     territory.id ? territory.references : []
   );
   const [observation, setObservation] = useState(
@@ -53,38 +68,39 @@ const TerritoryModal = ({
     useFirestore();
   const { getUser } = useLocalStorage();
   const { currentUser } = useAuth();
+  const { backTextView } = useTheme();
 
   useEffect(() => {
     setCongregacaoSelected(currentUser.uid);
-  }, [referencias, image]);
+  }, [references, image]);
 
-  const handleReference = () => {
-    const text = document.getElementById("ref-input").value;
+  const handleAddLine = (name, id, array, setArray) => {
+    const text = document.getElementById(id).value;
 
     // verifica se a caixa de texto está vazia
     if (text === "") {
-      alert("Escreva uma referência");
+      alert(`Escreva uma ${name.toLowerCase()}`);
       return;
     }
 
     let myArray = [];
 
     // verifica se já existe referencia, se sim adiciona-as ao novo array
-    if (referencias.length > 0) {
-      myArray.push(...referencias);
+    if (array.length > 0) {
+      myArray.push(...array);
     }
 
     // verifica se a nova referencia já existe, se sim sai
-    if (referencias.includes(text)) return;
+    if (array.includes(text)) return;
 
     // adiciona a nova referencia ao array
     myArray.push(text);
 
     // seta o novo array em referencias
-    setReferencias(myArray);
+    setArray(myArray);
 
     // limpa o input
-    document.getElementById("ref-input").value = "";
+    document.getElementById(id).value = "";
   };
 
   const handlePreview = (file) => {
@@ -108,14 +124,17 @@ const TerritoryModal = ({
       e.preventDefault();
 
       const territories = {
+        northPosition: northPosition,
+        streets: streets,
+        location: location,
         description: description, // to validate
         available: territory.id ? territory.available : true,
         observation: observation,
-        references: referencias, // to validate
+        references: references, // to validate
       };
 
       // if no description, map, or references, return
-      if (!description || !referencias) {
+      if (!description || !references) {
         alert("Preencha todos os campos obrigatórios");
         return;
       }
@@ -160,27 +179,84 @@ const TerritoryModal = ({
 
               <Form.Control
                 type="text"
+                placeholder="Link Google Maps"
+                value={mapLinkGoogle}
+                onChange={(e) => setMapLinkGoogle(e.target.value)}
+              />
+
+              <Form.Control
+                type="text"
                 placeholder="Descrição"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
               />
 
+              <Form.Control
+                type="text"
+                placeholder="Localidade"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+              />
+
               <div className="p-3 pt-1 pb-1">
-                {referencias &&
-                  referencias.map((referencia, idx) => (
+                {streets &&
+                  streets.map((street, idx) => (
                     <div
                       key={idx}
-                      className="bg-gray-200 p-1 flex items-center justify-between  rounded mb-1"
+                      className={`${backTextView} p-1 flex items-center justify-between rounded mb-1`}
                     >
+                      <div></div>
+                      {street}
+                      <Button
+                        size="sm"
+                        variant="outline-danger"
+                        className=""
+                        onClick={() => {
+                          const myArray = [...streets];
+                          myArray.splice(idx, 1);
+                          setStreets(myArray);
+                        }}
+                      >
+                        <ImCross size={10} />
+                      </Button>
+                    </div>
+                  ))}
+              </div>
+
+              <InputGroup className=" w-100 pt-0 pb-2">
+                <Form.Control
+                  type="text"
+                  className="w-75 m-0"
+                  placeholder="Adicionar rua"
+                  id="street-input"
+                />
+                <Button
+                  className="btn btn-primary m-0"
+                  onClick={() =>
+                    handleAddLine("Rua", "street-input", streets, setStreets)
+                  }
+                >
+                  <MdAddCircleOutline size={20} />
+                </Button>
+              </InputGroup>
+
+              <div className="p-3 pt-1 pb-1">
+                {references &&
+                  references.map((referencia, idx) => (
+                    <div
+                      key={idx}
+                      className={`${backTextView} p-1 flex items-center justify-between  rounded mb-1`}
+                    >
+                      <div></div>
                       {referencia}
                       <Button
                         size="sm"
                         variant="outline-danger"
                         className=""
                         onClick={() => {
-                          const myArray = [...referencias];
+                          const myArray = [...references];
                           myArray.splice(idx, 1);
-                          setReferencias(myArray);
+                          setReferences(myArray);
                         }}
                       >
                         <ImCross size={10} />
@@ -198,7 +274,14 @@ const TerritoryModal = ({
                 />
                 <Button
                   className="btn btn-primary m-0"
-                  onClick={handleReference}
+                  onClick={() =>
+                    handleAddLine(
+                      "Referência",
+                      "ref-input",
+                      references,
+                      setReferences
+                    )
+                  }
                 >
                   <MdAddCircleOutline size={20} />
                 </Button>
@@ -213,7 +296,7 @@ const TerritoryModal = ({
             </div>
           </Modal.Body>
 
-          <Modal.Footer>
+          <Modal.Footer className="border-none">
             {loading ? (
               <ButtonWithSpinner variant={"primary"} />
             ) : (
@@ -250,7 +333,7 @@ const TerritoryModal = ({
             </div>
           </Modal.Body>
 
-          <Modal.Footer>
+          <Modal.Footer className="border-none">
             <Button variant="danger" type="submit">
               Confirmar
             </Button>
@@ -269,8 +352,8 @@ const TerritoryModal = ({
 
   return (
     <>
-      <Modal.Header closeButton>
-        <Modal.Title>{title}</Modal.Title>
+      <Modal.Header className="flex items-center border-none" closeButton>
+        <Modal.Title className="text-sm font-semibold">{title}</Modal.Title>
       </Modal.Header>
 
       {type === "create" && insertContent()}
@@ -361,15 +444,41 @@ const DetailsModal = ({ territory, viewImage }) => {
     createdAt,
     updatedAt,
     assignment,
+    northPosition,
+    streets,
+    location,
   } = territory;
 
   const { backTextView } = useTheme();
 
   return (
     <>
-      <Modal.Header closeButton className="flex items-center">
-        <Modal.Title className="font-bold mr-6">{description}</Modal.Title>
-        <AvailableStatus value={available} />
+      <Modal.Header closeButton className="flex items-center border-none">
+        <div className="flex items-center w-full">
+          <div className="w-1/2 flex items-center justify-between">
+            <Modal.Title className="font-bold mr-6">{description}</Modal.Title>
+            <AvailableStatus value={available} />
+            <div>
+              {northPosition === "top" && (
+                <NorthTopIcon color="white" size={40} title="Norte para cima" />
+              )}
+              {northPosition === "right" && (
+                <NorthRightIcon
+                  color="white"
+                  size={40}
+                  title="Norte para direita"
+                />
+              )}
+              {northPosition === "left" && (
+                <NorthLeftIcon
+                  color="white"
+                  size={40}
+                  title="Norte para esquerda"
+                />
+              )}
+            </div>
+          </div>
+        </div>
       </Modal.Header>
 
       <Modal.Body className="pt-0">
@@ -382,11 +491,16 @@ const DetailsModal = ({ territory, viewImage }) => {
               src={map}
             ></Card.Img>
             <div className=" flex justify-center w-full">
-              <PdfComp territory={territory} />
+              <PdfComp territory={territory} image={map} />
             </div>
           </div>
 
           <div className="md:px-3  md:w-1/2">
+            <div className="flex items-center my-1 justify-between">
+              <h5>Localidade</h5>
+              <div className={`${backTextView} px-2 rounded `}>{location}</div>
+            </div>
+
             <div className="flex items-center my-1 justify-between">
               <h5>Data de inclusão</h5>
               <TimestampToDate
